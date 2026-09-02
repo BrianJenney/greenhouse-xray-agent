@@ -1,4 +1,38 @@
-# Greenhouse X-ray — two agents
+# Greenhouse X-ray — class starting point
+
+> **Branches**
+> - `main` — this one. Runs, but four things are stubbed as `TODO(n)`.
+> - `fixed` — the finished version. Look at it when you are stuck, not before.
+
+Clone, add two keys, and it works end to end. Then fix the four TODOs.
+
+```bash
+cp .env.example .env.local   # see the file: proxy key + a free serper.dev key
+npm install && npm run dev
+```
+
+## Your TODOs
+
+**TODO(1) — `lib/agents.ts`, the summary agent has no prompt.**
+Run `npm run smoke` first. It looks fine, because the zod field descriptions are
+carrying it. That is the trap. Write the prompt that actually guarantees the
+behaviour instead of hoping for it.
+
+**TODO(2) — `lib/agents.ts` + `app/api/plan/route.ts` + `app/page.tsx`, no
+conversation.** Every request starts from scratch, so "make it staff level"
+throws away everything just proposed. Thread the messages through and push the
+proposed queries back in as an assistant turn.
+
+**TODO(3) and TODO(4) — `evals/run.ts`, two missing eval cases.** One for a
+request naming a salary, one naming a city. Both correspond to real ways this
+returns zero results, silently.
+
+A case is a request, an action, and a rubric. That is the whole contract.
+
+## What already works
+
+Read these before you start — they are the parts worth stealing.
+
 
 Type what you want. **searchAgent** either rejects the request or writes up to 5
 **Google X-ray queries** against `site:boards.greenhouse.io`. Those come back to
@@ -17,21 +51,6 @@ npx tsx evals/queries.ts "kubernetes work, no management"   # queries only, no s
 npm run eval                 # 8 cases
 ```
 
-## Conversation
-
-The plan route takes the whole conversation, not one line. Proposed queries go
-back in as assistant turns, so a follow-up refines instead of restarting:
-
-```
-you:   senior backend engineer, golang
-agent: "Senior Backend Engineer" golang -intern
-       "Golang Engineer" -intern            ...
-
-you:   actually make it staff level and add kubernetes
-agent: "Staff Backend Engineer" golang kubernetes -intern
-       "Platform Engineer" kubernetes golang -intern       ...
-```
-
 ## Tracing
 
 `lib/tracing.ts` — one `registerTelemetry()` traces every model call in the
@@ -41,7 +60,7 @@ unless `LANGSMITH_TRACING=true`.
 ## Two routes
 
 ```
-POST /api/plan     { messages }
+POST /api/plan     { request }        <- TODO(2): should be { messages }
   searchAgent -> { action: 'reject', reason }         nothing runs
               -> { action: 'search', queries[<=5] }   shown to the user
 

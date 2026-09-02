@@ -7,7 +7,7 @@ import { withScope } from '../lib/greenhouse';
 async function main() {
   const reqs = process.argv.slice(2);
   for (const req of reqs.length ? reqs : ['kubernetes platform work, no management']) {
-    const { output } = await searchAgent([{ role: "user", content: req }]);
+    const { output } = await searchAgent(req);
     console.log(`\n${req}  ->  ${output.action}${output.reason ? `  (${output.reason})` : ''}`);
     for (const q of output.queries) {
       console.log('  ' + q + (/\b(AND|OR)\b|[()]/.test(q) ? '   !! operator, returns nothing' : ''));
