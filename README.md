@@ -17,10 +17,31 @@ npx tsx evals/queries.ts "kubernetes work, no management"   # queries only, no s
 npm run eval                 # 8 cases
 ```
 
+## Conversation
+
+The plan route takes the whole conversation, not one line. Proposed queries go
+back in as assistant turns, so a follow-up refines instead of restarting:
+
+```
+you:   senior backend engineer, golang
+agent: "Senior Backend Engineer" golang -intern
+       "Golang Engineer" -intern            ...
+
+you:   actually make it staff level and add kubernetes
+agent: "Staff Backend Engineer" golang kubernetes -intern
+       "Platform Engineer" kubernetes golang -intern       ...
+```
+
+## Tracing
+
+`lib/tracing.ts` — one `registerTelemetry()` traces every model call in the
+process, both agents and the eval judge, with nothing to wire per call. A no-op
+unless `LANGSMITH_TRACING=true`.
+
 ## Two routes
 
 ```
-POST /api/plan     { request }
+POST /api/plan     { messages }
   searchAgent -> { action: 'reject', reason }         nothing runs
               -> { action: 'search', queries[<=5] }   shown to the user
 

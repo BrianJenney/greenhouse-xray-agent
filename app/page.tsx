@@ -34,25 +34,36 @@ const post = (path: string, body: unknown) =>
 
 export default function Page() {
   const [request, setRequest] = useState('');
+  // The conversation so far. Proposed queries go back in as assistant turns so
+  // "more senior" refines them instead of starting from nothing.
+  const [history, setHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [queries, setQueries] = useState<string[]>([]);
   const [results, setResults] = useState<Results | null>(null);
   const [busy, setBusy] = useState<'' | 'plan' | 'run'>('');
 
-  async function propose(q: string) {
-    setRequest(q);
+  async function propose(q: string, fresh = false) {
+    const messages = fresh ? [] : history;
+    const next = [...messages, { role: 'user' as const, content: q }];
+    setRequest('');
     setPlan(null);
     setResults(null);
     setBusy('plan');
-    const p: Plan = await post('/api/plan', { request: q });
+
+    const p: Plan = await post('/api/plan', { messages: next });
     setPlan(p);
     setQueries(p.queries ?? []);
+    setHistory([
+      ...next,
+      { role: 'assistant' as const, content: p.queries?.join('\n') || p.reason },
+    ]);
     setBusy('');
   }
 
   async function run() {
     setBusy('run');
-    setResults(await post('/api/execute', { request, queries }));
+    const asked = history.find((h) => h.role === 'user')?.content ?? '';
+    setResults(await post('/api/execute', { request: asked, queries }));
     setBusy('');
   }
 
@@ -74,13 +85,26 @@ export default function Page() {
         <input
           value={request}
           onChange={(e) => setRequest(e.target.value)}
-          placeholder="what are you looking for?"
+          placeholder={history.length ? 'refine it — "more senior", "drop the react ones"' : 'what are you looking for?'}
           className="flex-1 px-2 py-1 normal-case"
           autoFocus
         />
         <button disabled={!!busy} className="px-3 py-1 disabled:opacity-40">
-          {busy === 'plan' ? 'THINKING...' : 'PROPOSE'}
+          {busy === 'plan' ? 'THINKING...' : history.length ? 'REFINE' : 'PROPOSE'}
         </button>
+        {history.length > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              setHistory([]);
+              setPlan(null);
+              setResults(null);
+            }}
+            className="px-3 py-1"
+          >
+            NEW
+          </button>
+        )}
       </form>
 
       <div className="flex-1 space-y-5 overflow-y-auto">
@@ -90,7 +114,7 @@ export default function Page() {
             {EXAMPLES.map((e) => (
               <button
                 key={e}
-                onClick={() => propose(e)}
+                onClick={() => propose(e, true)}
                 className="block w-full border-0 px-0 text-left normal-case hover:text-[var(--scr-hi)]"
               >
                 {e}

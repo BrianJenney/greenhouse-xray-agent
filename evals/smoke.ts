@@ -5,7 +5,7 @@ import { execute, withScope } from '../lib/greenhouse';
 
 async function main() {
   const request = process.argv[2] ?? 'kubernetes platform work, no management';
-  const { output: plan } = await searchAgent(request);
+  const { output: plan } = await searchAgent([{ role: "user", content: request }]);
   console.log(`${request}  ->  ${plan.action}`);
   if (plan.action === 'reject') return console.log('  ' + plan.reason);
 

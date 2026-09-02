@@ -1,5 +1,8 @@
 import { searchSummaryAgent } from '@/lib/agents';
+import { initTracing } from '@/lib/tracing';
 import { execute } from '@/lib/greenhouse';
+
+initTracing();
 
 export const maxDuration = 60;
 

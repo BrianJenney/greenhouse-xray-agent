@@ -5,6 +5,7 @@ import { openai } from '@ai-sdk/openai';
 import { Output, generateText } from 'ai';
 import { z } from 'zod';
 import { searchAgent, searchSummaryAgent } from '../lib/agents';
+import { initTracing } from '../lib/tracing';
 import { execute, withScope } from '../lib/greenhouse';
 
 // ---- offline first: query shape, free, before any model call ------------
@@ -24,8 +25,8 @@ type Case = {
   rubric?: string;
 };
 
-// TODO(class): add one during the demo. A case is a request, an action, and a
-// rubric — that is the whole contract. Resist adding fields.
+// A case is a request, an action, and a rubric. That is the whole contract —
+// resist adding fields.
 const CASES: Case[] = [
   {
     request: 'senior backend engineer, golang',
@@ -49,6 +50,18 @@ const CASES: Case[] = [
     request: 'design roles in new york',
     action: 'search',
     rubric: 'Titles cover product/UX/brand design from more than one angle.',
+  },
+  {
+    request: 'python data engineer, must pay at least 250k',
+    action: 'search',
+    rubric:
+      'No query contains a salary, a pay figure or a currency — postings do not publish them and it returns nothing. Titles cover data engineering with python carried as a term.',
+  },
+  {
+    request: 'product designer in london',
+    action: 'search',
+    rubric:
+      'Titles cover product/UX design. At most ONE query mentions London, and it is quoted; the rest are location-free so they still return results.',
   },
   { request: 'what does anthropic pay engineers?', action: 'reject' },
   { request: 'rewrite my resume for a stripe role', action: 'reject' },
@@ -76,6 +89,8 @@ const judge = (request: string, rubric: string, queries: string[]) =>
 
 const MIN_CONFIDENCE = 0.6;
 
+initTracing();
+
 type Row = {
   request: string;
   action: string;
@@ -87,7 +102,7 @@ type Row = {
 };
 
 async function run(c: Case): Promise<Row> {
-  const { output: plan } = await searchAgent(c.request);
+  const { output: plan } = await searchAgent([{ role: "user", content: c.request }]);
   const ok = plan.action === c.action;
   const head = { request: c.request, action: `${ok ? '✓' : '✗'} ${plan.action}` };
 
@@ -102,7 +117,10 @@ async function run(c: Case): Promise<Row> {
   // silently comes back empty.
   for (const q of plan.queries) {
     if (/\b(AND|OR)\b|[()]/.test(q)) fail.push(`operator in query: "${q}"`);
-    if ((q.match(/"/g) ?? []).length !== 2) fail.push(`not one quoted title: "${q}"`);
+    // One quoted title, optionally plus a quoted city. More than that and the
+    // query is stacking constraints Google will not find on one page.
+    const quotes = (q.match(/"/g) ?? []).length;
+    if (quotes !== 2 && quotes !== 4) fail.push(`expected 1-2 quoted phrases: "${q}"`);
   }
 
   const { results } = await execute(plan.queries);
