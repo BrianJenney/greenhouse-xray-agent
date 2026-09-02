@@ -5,7 +5,7 @@ import { openai } from '@ai-sdk/openai';
 import { Output, generateText } from 'ai';
 import { z } from 'zod';
 import { searchAgent, searchSummaryAgent } from '../lib/agents';
-import { initTracing } from '../lib/tracing';
+import { flushTracing, initTracing } from '../lib/tracing';
 import { execute, withScope } from '../lib/greenhouse';
 
 // ---- offline first: query shape, free, before any model call ------------
@@ -183,4 +183,4 @@ async function main() {
   );
   if (actionAcc < 1 || avg < 0.7) process.exitCode = 1;
 }
-main();
+main().then(flushTracing);

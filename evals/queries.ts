@@ -1,8 +1,11 @@
 // Show the Google queries the agent writes, without running any search.
 // `npx tsx evals/queries.ts ["your request"]`
 import 'dotenv/config';
+import { flushTracing, initTracing } from '../lib/tracing';
 import { searchAgent } from '../lib/agents';
 import { withScope } from '../lib/greenhouse';
+
+initTracing();
 
 async function main() {
   const reqs = process.argv.slice(2);
@@ -15,4 +18,4 @@ async function main() {
     }
   }
 }
-main();
+main().then(flushTracing);

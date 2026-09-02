@@ -1,7 +1,10 @@
 // One live X-ray end to end. `npm run smoke ["your request"]`
 import 'dotenv/config';
+import { flushTracing, initTracing } from '../lib/tracing';
 import { searchAgent, searchSummaryAgent } from '../lib/agents';
 import { execute, withScope } from '../lib/greenhouse';
+
+initTracing();
 
 async function main() {
   const request = process.argv[2] ?? 'kubernetes platform work, no management';
@@ -21,4 +24,4 @@ async function main() {
   for (const p of sum.picks)
     console.log(`  ${urls.has(p.url) ? '✓' : '✗ INVENTED'} ${p.url}\n      ${p.why}`);
 }
-main();
+main().then(flushTracing);
