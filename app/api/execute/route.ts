@@ -6,9 +6,12 @@ initTracing();
 
 export const maxDuration = 60;
 
+type Msg = { role: 'user' | 'assistant'; content: string };
+
 /** Step 2. Run the queries the user kept, then summarise what came back. */
 export async function POST(req: Request) {
-  const { request, queries }: { request: string; queries: string[] } = await req.json();
+  const { messages, queries }: { messages: Msg[]; queries: string[] } = await req.json();
+  const request = messages.find((m) => m.role === 'user')?.content ?? '';
 
   const t = Date.now();
   let runs, results;

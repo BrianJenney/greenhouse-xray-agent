@@ -1,38 +1,34 @@
 # Greenhouse X-ray — class starting point
 
 > **Branches**
-> - `main` — this one. Runs, but four things are stubbed as `TODO(n)`.
-> - `fixed` — the finished version. Look at it when you are stuck, not before.
-
-Clone, add two keys, and it works end to end. Then fix the four TODOs.
+> - `main` — this one. Runs end to end, four things stubbed as `TODO(n)`.
+> - `fixed` — the finished version. For when you are stuck, not before.
 
 ```bash
-cp .env.example .env.local   # see the file: proxy key + a free serper.dev key
+cp .env.example .env.local   # proxy key + a free serper.dev key
 npm install && npm run dev
 ```
 
 ## Your TODOs
 
-**TODO(1) — `lib/agents.ts`, the summary agent has no prompt.**
-Run `npm run smoke` first. It looks fine, because the zod field descriptions are
-carrying it. That is the trap. Write the prompt that actually guarantees the
-behaviour instead of hoping for it.
+**TODO(1) — `lib/agents.ts`.** The summary agent has a one-line system prompt.
+Run `npm run smoke` first: it looks fine, because the zod field descriptions are
+carrying it. Write the prompt that guarantees the behaviour instead of hoping
+for it.
 
-**TODO(2) — `lib/agents.ts` + `app/api/plan/route.ts` + `app/page.tsx`, no
-conversation.** Every request starts from scratch, so "make it staff level"
-throws away everything just proposed. Thread the messages through and push the
-proposed queries back in as an assistant turn.
+**TODO(2) — `app/api/plan/route.ts`.** The page already posts the whole
+conversation. The route throws all of it away except the first message, so
+"make it staff level" starts over. Pass it through and teach the agent to
+refine.
 
-**TODO(3) and TODO(4) — `evals/run.ts`, two missing eval cases.** One for a
-request naming a salary, one naming a city. Both correspond to real ways this
-returns zero results, silently.
+**TODO(3) / TODO(4) — `evals/run.ts`.** Two missing cases: one request naming a
+salary, one naming a city. Both are real ways this returns nothing.
 
 A case is a request, an action, and a rubric. That is the whole contract.
 
 ## What already works
 
 Read these before you start — they are the parts worth stealing.
-
 
 Type what you want. **searchAgent** either rejects the request or writes up to 5
 **Google X-ray queries** against `site:boards.greenhouse.io`. Those come back to
@@ -51,6 +47,21 @@ npx tsx evals/queries.ts "kubernetes work, no management"   # queries only, no s
 npm run eval                 # 8 cases
 ```
 
+## Conversation
+
+The plan route takes the whole conversation, not one line. Proposed queries go
+back in as assistant turns, so a follow-up refines instead of restarting:
+
+```
+you:   senior backend engineer, golang
+agent: "Senior Backend Engineer" golang -intern
+       "Golang Engineer" -intern            ...
+
+you:   actually make it staff level and add kubernetes
+agent: "Staff Backend Engineer" golang kubernetes -intern
+       "Platform Engineer" kubernetes golang -intern       ...
+```
+
 ## Tracing
 
 `lib/tracing.ts` — one `registerTelemetry()` traces every model call in the
@@ -60,7 +71,7 @@ unless `LANGSMITH_TRACING=true`.
 ## Two routes
 
 ```
-POST /api/plan     { request }        <- TODO(2): should be { messages }
+POST /api/plan     { messages }
   searchAgent -> { action: 'reject', reason }         nothing runs
               -> { action: 'search', queries[<=5] }   shown to the user
 
@@ -77,43 +88,29 @@ POST /api/execute  { request, queries }
 ## The queries
 
 ```
-"Senior Backend Engineer" golang -intern
-"Staff Backend Engineer" golang -intern
-"Golang Engineer" -intern
+site:boards.greenhouse.io ("Backend Engineer" OR "Senior Backend Engineer") golang -intern
 ```
 
-**One quoted job title, then any technologies as bare words, then
-`-exclusions`.** No OR, no parentheses — the five queries *are* the OR, results
-merge, and a posting several queries found ranks first. Every query in the UI
-links to the same search on google.com so you can check the agent by hand.
+Ordinary Google syntax — quoted titles, `OR` groups, parentheses, `-`
+exclusions. `site:` is added in `lib/greenhouse.ts` so the agent cannot forget
+it. Every query in the UI links to that exact search on google.com, so you can
+check the agent by hand.
 
-Four rules the prompt has to teach, each learned by getting zero results:
+It fails one way: **over-constraining.** Google needs one page containing
+everything you asked for, and when none exists you get zero results and no
+error. Four rules, each measured, each in the prompt:
 
-- **Carry the technology.** `"Senior Backend Engineer" -intern` finds the right
-  title doing the wrong work. Golang has to be in the query.
-- **Keep queries short.** Title + at most two bare words. Stacking seniority,
-  a technology, a city and a salary finds no page containing all of it —
-  silence, not an error. Never put a salary in a query.
-- **Titles, not skills** in the quoted part. Postings say "Backend Engineer",
-  never "someone who knows Go".
-- **Staff and Principal are IC titles.** "No management" excludes
-  `-manager -director -head -vp`, not those.
+| Rule | Broken |
+|---|---|
+| Common titles only | `"Backend Engineer"` → 10 · `"Golang Engineer"` → **0** |
+| No city, state or country | `("Product Designer" OR "UX Designer")` → 10 · same query `+ London` → **0** |
+| No salary or pay figure | postings do not publish them |
+| Don't repeat a technology already in the titles | `("Golang Engineer" …) golang` → **0** |
 
-### The scoping trick
-
-`site:boards.greenhouse.io` looks right and is not. Google honours it alone, then
-**silently drops it** the moment you add search terms — you get YouTube and
-LinkedIn back, with no error. What actually pins results to Greenhouse is the
-phrase every posting page carries in its title:
-
-```
-"Job Application for" greenhouse "AI Engineer" -intern
-```
-
-`withScope()` adds that; results are then filtered to URLs matching
-`greenhouse.io/*/jobs/<id>`. And **`OR` or parentheses anywhere in a scoped
-query returns zero results** — no error, just nothing. That one is an eval
-assertion now, because it costs an afternoon to find.
+Express seniority with exclusions (`-senior -staff`) or the ordinary `Senior X`
+form, never by inventing a rarer title. A constraint that cannot go in a query
+is **not** a reason to reject — say it in `interpretation` and let the user
+filter. Rejecting gives them nothing instead of a list they can scan.
 
 ## Search provider
 

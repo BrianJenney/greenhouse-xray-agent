@@ -22,7 +22,7 @@ const SLIDES: { title: string; tutorial: string; production: string; where: stri
     title: 'Let someone else run it',
     tutorial: 'Invent a query language, then write the parser for it.',
     production:
-      'One exact job title per query, no OR, no parens. The five queries ARE the OR. Every query in the UI links to the same Google search, so anyone can check the agent by hand.',
+      'Ordinary Google syntax: quoted titles, OR groups, minus exclusions. site: is added in code so the agent cannot forget it. Every query links to the same search on google.com, so anyone can check the agent by hand.',
     where: 'lib/greenhouse.ts -> withSite',
   },
   {
@@ -36,7 +36,7 @@ const SLIDES: { title: string; tutorial: string; production: string; where: stri
     title: 'Free until it is not',
     tutorial: 'Scrape a search engine. It worked on my laptop.',
     production:
-      'site:boards.greenhouse.io looks right and is not — Google honours it alone, then silently drops it once you add terms and hands back YouTube. The real scope is the phrase every posting carries: "Job Application for". No error told us; only running it did.',
+      'Zero results, no error. "Golang Engineer" returns nothing where "Backend Engineer" returns ten; adding a city kills a query outright. We measured each one and put the rule in the prompt — the eval now fails a case only when EVERY query comes back empty.',
     where: 'SERPER_API_KEY',
   },
   {

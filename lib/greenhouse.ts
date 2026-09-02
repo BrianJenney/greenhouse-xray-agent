@@ -9,19 +9,11 @@ export type Hit = {
 	queries: string[];
 };
 
-/**
- * `site:job-boards.greenhouse.io` looks like the right scope and is not: Google
- * honours it on its own, then silently drops it the moment you add search
- * terms, and you get YouTube and LinkedIn back. What actually pins results to
- * Greenhouse is the phrase every posting page carries in its title.
- */
-const SCOPE = '"Job Application for" greenhouse ';
+/** Every query is scoped to Greenhouse. Added here so the agent cannot forget. */
+const SCOPE = 'site:boards.greenhouse.io ';
 const PER_QUERY = 10;
 
-export const withScope = (q: string) =>
-	q.toLowerCase().includes('job application for')
-		? q.trim()
-		: SCOPE + q.trim();
+export const withScope = (q: string) => (/\bsite:/i.test(q) ? q.trim() : SCOPE + q.trim());
 
 /** "Job Application for Staff Engineer at Ramp" -> title + company. */
 function split(raw: string) {
