@@ -218,19 +218,6 @@ export const searchSummaryAgent = (request: string, hits: Hit[]) =>
 		model: model(SUMMARY_MODEL),
 		output: Output.object({ schema: summarySchema, name: 'summary' }),
 		// TODO(1): write this system prompt.
-		//
-		// Run `npm run smoke` first. It looks fine — the zod field descriptions
-		// above are doing the work, and the model behaves reasonably by accident.
-		// That is the trap: behaving and being guaranteed to behave are different
-		// things, and you find out which one you have on the day it matters.
-		//
-		// What is missing is any guarantee that it:
-		//   - uses ONLY the list given, and copies every url exactly rather than
-		//     reconstructing a plausible one (app/api/execute/route.ts drops the
-		//     ones that do not resolve — check the console for how many)
-		//   - picks a handful worth opening, not everything it was handed
-		//   - fills "gaps" honestly. A summary that cannot say "these results are
-		//     bad" is decoration, and this one has no reason to say it.
 		system: 'You review job search results.',
 		prompt: `They asked for: ${request}\n\nResults:\n${hits
 			.map(
