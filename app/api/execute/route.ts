@@ -14,9 +14,9 @@ export async function POST(req: Request) {
   const request = messages.find((m) => m.role === 'user')?.content ?? '';
 
   const t = Date.now();
-  let runs, results;
+  let runs, results, dropped;
   try {
-    ({ runs, results } = await execute(queries));
+    ({ runs, results, dropped } = await execute(queries));
   } catch (e) {
     return Response.json({ error: e instanceof Error ? e.message : String(e) });
   }
@@ -29,8 +29,10 @@ export async function POST(req: Request) {
       summary: '',
       gaps: '',
       picks: [],
-      empty:
-        'No Greenhouse postings matched. These queries are probably too specific — drop a technology or a seniority word and run them again.',
+      dropped,
+      empty: dropped
+        ? `Every match was outside the US (${dropped} dropped). Widen the titles or try a remote-friendly role.`
+        : 'No Greenhouse postings matched. These queries are probably too specific — drop a technology or a seniority word and run them again.',
     });
 
   const { output } = await searchSummaryAgent(request, results);
@@ -43,5 +45,12 @@ export async function POST(req: Request) {
     .map((p) => ({ ...p, hit: byUrl.get(p.url)! }));
 
   console.log(`execute ${Date.now() - t}ms ${results.length} results, ${picks.length} picks`);
-  return Response.json({ runs, found: results.length, summary: output.summary, gaps: output.gaps, picks });
+  return Response.json({
+    runs,
+    found: results.length,
+    dropped,
+    summary: output.summary,
+    gaps: output.gaps,
+    picks,
+  });
 }

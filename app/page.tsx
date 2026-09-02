@@ -10,6 +10,7 @@ type Msg = { role: 'user' | 'assistant'; content: string };
 type Results = {
   runs: Run[];
   found: number;
+  dropped?: number;
   summary: string;
   gaps: string;
   picks: { url: string; why: string; hit: Hit }[];
@@ -170,7 +171,11 @@ export default function Page() {
         {results && !results.error && !results.empty && (
           <>
             <div>
-              <div className={dim}>{results.found} POSTINGS — CLICK TO CHECK ON GOOGLE</div>
+              <div className={dim}>
+                {results.found} US POSTINGS
+                {results.dropped ? ` · ${results.dropped} NON-US DROPPED` : ''} — CLICK TO CHECK ON
+                GOOGLE
+              </div>
               {results.runs.map((r) => (
                 <div key={r.query} className="normal-case">
                   <span className={dim}>{String(r.hits).padStart(3)} </span>

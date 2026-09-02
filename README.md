@@ -112,6 +112,25 @@ form, never by inventing a rarer title. A constraint that cannot go in a query
 is **not** a reason to reject — say it in `interpretation` and let the user
 filter. Rejecting gives them nothing instead of a list they can scan.
 
+## Location
+
+A location cannot go in the query — Google returns nothing for it, because
+postings do not repeat the location in the text it indexes. So we search
+without it, then read each posting's **real** location from the Greenhouse
+board API, which the result URL already tells us how to call. Free, exact, and
+it turns location from a hope into a filter:
+
+- non-US postings are dropped in code (`isUS` in `lib/greenhouse.ts`), and the
+  UI says how many
+- unknown locations are kept — a posting we could not resolve is not evidence
+  that it is foreign
+- the real location goes to the summary agent, so it ranks by place instead of
+  telling you to "verify the location"
+
+Scope stays `site:boards.greenhouse.io`. `site:*.greenhouse.io` looks more
+thorough and is worse: it pulls in `job-boards.eu` and `job-boards.anz`, so a
+Bay Area search comes back European.
+
 ## Search provider
 
 Serper (Google results, 2,500 free credits, no card) via `SERPER_API_KEY`.

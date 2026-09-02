@@ -79,6 +79,28 @@ async function runQuery(query: string): Promise<Hit[]> {
 		}));
 }
 
+const STATES =
+	'AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC'.split(
+		' ',
+	);
+
+/**
+ * US only. We have the real location, so this is a filter and not a hope —
+ * putting "USA" in the query returns nothing, the same as any other location.
+ *
+ * Unknown locations are kept: a posting we could not resolve is not evidence
+ * that it is foreign, and dropping it would hide real jobs.
+ */
+export function isUS(location: string): boolean {
+	if (!location) return true;
+	const l = location.toLowerCase();
+	if (/\b(united states|usa|u\.s\.|us remote|remote us)\b/.test(l)) return true;
+	if (STATES.some((st) => new RegExp(`,\\s*${st.toLowerCase()}\\b`).test(l))) return true;
+	// "Remote" with no country named at all.
+	if (/^remote$/.test(l.trim())) return true;
+	return false;
+}
+
 export type Run = { query: string; hits: number };
 
 /**
@@ -107,5 +129,7 @@ export async function execute(queries: string[]) {
 	// Locations, in parallel. Free, and exact — the board API is derivable
 	// straight from the URL Google gave us.
 	await Promise.all(results.map(async (r) => void (r.location = await locate(r.url))));
-	return { runs, results };
+
+	const us = results.filter((r) => isUS(r.location));
+	return { runs, results: us, dropped: results.length - us.length };
 }
