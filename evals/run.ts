@@ -110,10 +110,24 @@ async function run(c: Case): Promise<Row> {
 
   const fail: string[] = [];
 
-  // Salaries are the one thing that reliably returns nothing — postings do not
-  // publish them, so no page contains the figure and the query dies silently.
-  for (const q of plan.queries)
+  for (const q of plan.queries) {
+    // Postings do not publish pay, so a figure matches no page.
     if (/\$|\d{2,3}k\b|salary/i.test(q)) fail.push(`pay figure in query: "${q}"`);
+
+    // A catch-all title returns lots of results and almost no matches. This is
+    // the difference between "11 postings, mostly generic" and "4 real ones".
+    const GENERIC = ['software engineer', 'engineer', 'developer', 'software developer'];
+    const quoted = (q.match(/"([^"]+)"/g) ?? []).map((t) => t.slice(1, -1).toLowerCase());
+    if (quoted.length && quoted.every((t) => GENERIC.includes(t)))
+      fail.push(`only catch-all titles: "${q}"`);
+
+    // Self-defeating exclusion: "Product Manager" with -manager matches
+    // nothing, and the query looks perfectly reasonable until you read it.
+    const titles = (q.match(/"[^"]+"/g) ?? []).join(' ').toLowerCase();
+    for (const ex of q.match(/-\w+/g) ?? [])
+      if (titles.includes(ex.slice(1).toLowerCase()))
+        fail.push(`excludes its own title word "${ex}": "${q}"`);
+  }
 
   const { runs, results } = await execute(plan.queries);
 

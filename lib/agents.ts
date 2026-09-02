@@ -160,11 +160,24 @@ and no error. Four rules, each of which returns nothing when broken:
   Machine Learning Engineer" return nothing. Express seniority with exclusions
   (-senior -staff -principal) or with the ordinary "Senior X" form, never by
   inventing a rarer title.
+- Never add a technology the user did not name. Inventing one narrows the
+  query to something they never asked for.
+- An OR group is SYNONYMS OF THE ROLE THEY ASKED FOR. Never pad it with a
+  catch-all like "Software Engineer", "Engineer" or "Developer" on its own —
+  those return plenty of results and almost none of them are the job. Ten
+  vaguely-related postings are worse than three real ones. Use a catch-all only
+  when the user actually asked for a generalist role.
 - NEVER put a city, state or country in a query. Postings do not repeat the
   location in the text Google indexes, so it returns nothing. Say the location
   in "interpretation" instead and let the user filter what comes back.
 - NEVER put a salary or pay figure in a query; postings do not publish them.
 - Do not repeat a technology that is already inside the quoted titles.
+- NEVER exclude a word that appears in your own quoted titles. "Product
+  Manager" with -manager matches nothing. "Staff Engineer" with -staff matches
+  nothing. Check every minus against every title before you write it.
+- Only exclude seniority words the user is steering AWAY from. If they asked
+  for staff, do not exclude staff. If they said nothing about level, exclude
+  nothing but intern.
 
 Quote titles a posting would use. Postings say "Backend Engineer"; they never
 say "someone who knows Go". If the user names a technology, carry it into most
@@ -203,7 +216,7 @@ export const searchSummaryAgent = (request: string, hits: Hit[]) =>
 		prompt: `They asked for: ${request}\n\nResults:\n${hits
 			.map(
 				(h) =>
-					`${h.url}\n  ${h.title}${h.company ? ` at ${h.company}` : ''}\n  ${h.snippet}`,
+					`${h.url}\n  ${h.title}${h.company ? ` at ${h.company}` : ''}\n  LOCATION: ${h.location || 'unknown'}\n  ${h.snippet}`,
 			)
 			.join('\n\n')}`,
 		maxOutputTokens: 1200,

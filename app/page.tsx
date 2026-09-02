@@ -127,7 +127,9 @@ export default function Page() {
 
         {plan?.action === 'search' && (
           <div>
-            <div className={dim}>QUERIES — EDIT OR REMOVE, THEN RUN</div>
+            <div className={dim}>
+              QUERIES — EDIT OR REMOVE, THEN RUN. site: IS ADDED FOR YOU.
+            </div>
             {queries.map((q, i) => (
               <div key={i} className="flex items-baseline gap-2 py-1">
                 <button
@@ -141,8 +143,17 @@ export default function Page() {
                   onChange={(e) => setQueries(queries.map((x, n) => (n === i ? e.target.value : x)))}
                   className="flex-1 px-2 py-0.5 normal-case"
                 />
+                <a
+                  href={`https://www.google.com/search?q=${encodeURIComponent(withScope(q))}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`text-xs underline ${dim}`}
+                >
+                  GOOGLE
+                </a>
               </div>
             ))}
+            <div className={`pt-1 text-xs normal-case ${dim}`}>{withScope(queries[0] ?? '')}</div>
             <button
               onClick={run}
               disabled={!!busy || !queries.length}
@@ -188,7 +199,10 @@ export default function Page() {
                       <a href={p.url} target="_blank" rel="noreferrer" className="underline">
                         {p.hit.title}
                       </a>
-                      <div className={`text-xs ${dim}`}>{p.why}</div>
+                      <div className={`text-xs ${dim}`}>
+                        {p.hit.location ? `${p.hit.location} — ` : ''}
+                        {p.why}
+                      </div>
                     </td>
                   </tr>
                 ))}

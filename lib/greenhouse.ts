@@ -5,11 +5,37 @@ export type Hit = {
 	company: string;
 	url: string;
 	snippet: string;
+	/** Real posting location, fetched from Greenhouse. '' when unavailable. */
+	location: string;
 	/** Which of the user's queries surfaced this. */
 	queries: string[];
 };
 
-/** Every query is scoped to Greenhouse. Added here so the agent cannot forget. */
+/**
+ * A location cannot go in the query — Google returns nothing for it, because
+ * postings do not repeat the location in the text it indexes. So we search
+ * without it and read the real location off each posting afterwards, free and
+ * exact, from the board API the URL already tells us how to call.
+ */
+async function locate(url: string): Promise<string> {
+	const m = url.match(/greenhouse\.io\/([^/]+)\/jobs\/(\d+)/);
+	if (!m) return '';
+	try {
+		const r = await fetch(`https://boards-api.greenhouse.io/v1/boards/${m[1]}/jobs/${m[2]}`);
+		if (!r.ok) return '';
+		const j = (await r.json()) as { location?: { name?: string } };
+		return j.location?.name ?? '';
+	} catch {
+		return '';
+	}
+}
+
+/**
+ * Greenhouse and nothing else, and only this subdomain. site:*.greenhouse.io
+ * looks more thorough and is worse: it pulls in the regional boards
+ * (job-boards.eu, job-boards.anz), so a Bay Area search comes back European.
+ * Added here so the agent cannot forget it.
+ */
 const SCOPE = 'site:boards.greenhouse.io ';
 const PER_QUERY = 10;
 
@@ -48,6 +74,7 @@ async function runQuery(query: string): Promise<Hit[]> {
 			...split(o.title),
 			url: o.link,
 			snippet: o.snippet ?? '',
+			location: '',
 			queries: [query],
 		}));
 }
@@ -77,5 +104,8 @@ export async function execute(queries: string[]) {
 	const results = [...byUrl.values()].sort(
 		(a, b) => b.queries.length - a.queries.length,
 	);
+	// Locations, in parallel. Free, and exact — the board API is derivable
+	// straight from the URL Google gave us.
+	await Promise.all(results.map(async (r) => void (r.location = await locate(r.url))));
 	return { runs, results };
 }
