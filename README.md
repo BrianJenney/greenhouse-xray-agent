@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Greenhouse X-ray — two agents
 
-## Getting Started
+Type what you want. **searchAgent** either rejects the request or writes up to 5
+**Google X-ray queries** against `site:boards.greenhouse.io`. Those come back to
+you first — edit any, remove any — and only then do they run. Top 5 results per
+query, merged; **searchSummaryAgent** reads them and picks what is worth opening.
 
-First, run the development server:
+Two small things are the model's job: write the queries, and review the results.
+
+## Run
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local   # OPENAI_API_KEY, OPENAI_BASE_URL, SERPER_API_KEY
+npm run dev                  # app at /, slides at /slides
+
+npx tsx evals/queries.ts "kubernetes work, no management"   # queries only, no search
+npm run eval                 # 8 cases
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Two routes
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+POST /api/plan     { request }
+  searchAgent -> { action: 'reject', reason }         nothing runs
+              -> { action: 'search', queries[<=5] }   shown to the user
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+  [ user edits / removes ]
 
-## Learn More
+POST /api/execute  { request, queries }
+  each query -> Google, scoped to site:boards.greenhouse.io, top 5
+  merge by URL, rank by how many queries surfaced it
+  searchSummaryAgent -> { summary, picks[], gaps }
+  URLs that do not resolve are dropped before render
+  zero results -> a message saying so, and the summary agent is not called
+```
 
-To learn more about Next.js, take a look at the following resources:
+## The queries
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+"Senior Backend Engineer" golang -intern
+"Staff Backend Engineer" golang -intern
+"Golang Engineer" -intern
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**One quoted job title, then any technologies as bare words, then
+`-exclusions`.** No OR, no parentheses — the five queries *are* the OR, results
+merge, and a posting several queries found ranks first. Every query in the UI
+links to the same search on google.com so you can check the agent by hand.
 
-## Deploy on Vercel
+Four rules the prompt has to teach, each learned by getting zero results:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Carry the technology.** `"Senior Backend Engineer" -intern` finds the right
+  title doing the wrong work. Golang has to be in the query.
+- **Keep queries short.** Title + at most two bare words. Stacking seniority,
+  a technology, a city and a salary finds no page containing all of it —
+  silence, not an error. Never put a salary in a query.
+- **Titles, not skills** in the quoted part. Postings say "Backend Engineer",
+  never "someone who knows Go".
+- **Staff and Principal are IC titles.** "No management" excludes
+  `-manager -director -head -vp`, not those.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### The scoping trick
+
+`site:boards.greenhouse.io` looks right and is not. Google honours it alone, then
+**silently drops it** the moment you add search terms — you get YouTube and
+LinkedIn back, with no error. What actually pins results to Greenhouse is the
+phrase every posting page carries in its title:
+
+```
+"Job Application for" greenhouse "AI Engineer" -intern
+```
+
+`withScope()` adds that; results are then filtered to URLs matching
+`greenhouse.io/*/jobs/<id>`. And **`OR` or parentheses anywhere in a scoped
+query returns zero results** — no error, just nothing. That one is an eval
+assertion now, because it costs an afternoon to find.
+
+## Search provider
+
+Serper (Google results, 2,500 free credits, no card) via `SERPER_API_KEY`.
+
+> Keyless engines do not work for this. DuckDuckGo's HTML endpoint returns an
+> anomaly challenge after a handful of requests and Mojeek serves a captcha —
+> both fine for one manual search, both dead in a classroom. Greenhouse itself
+> has no cross-board search: `?q=`, `?search=`, `/v1/boards`,
+> `my.greenhouse.io/api/jobs/search` are all ignored or 404.
+
+## Evals
+
+A case is a request, an expected action, and a rubric — that is the whole
+contract. The code assertions are only the two things worth failing a build
+over: a literal `AND` in a query, and a URL the summary agent invented. The
+judge grades taste, on a different model, and a grading it will not commit to is
+dropped rather than counted.
+
+## Not here yet
+
+No auth, no rate limiting, no caching, no persistence, no tracing. Timing goes
+to `console.log` in `app/api/agent/route.ts` — that's the line we replace with
+LangSmith during class.
