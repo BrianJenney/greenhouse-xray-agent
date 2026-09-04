@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "eval": "tsx evals/run.ts",
-    "smoke": "tsx evals/smoke.ts"
+    "eval": "tsx evals/eval.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.53",

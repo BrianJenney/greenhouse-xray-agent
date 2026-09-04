@@ -1,6 +1,6 @@
 import { searchSummaryAgent } from '@/lib/agents';
+import { search } from '@/lib/search';
 import { initTracing } from '@/lib/tracing';
-import { execute } from '@/lib/greenhouse';
 
 initTracing();
 
@@ -13,44 +13,31 @@ export async function POST(req: Request) {
   const { messages, queries }: { messages: Msg[]; queries: string[] } = await req.json();
   const request = messages.find((m) => m.role === 'user')?.content ?? '';
 
-  const t = Date.now();
-  let runs, results, dropped;
+  let found;
   try {
-    ({ runs, results, dropped } = await execute(queries));
+    found = await search(queries);
   } catch (e) {
     return Response.json({ error: e instanceof Error ? e.message : String(e) });
   }
-  // Nothing matched: say so. Do not spend a summary call describing an empty
-  // list, and never hand the UI a blank screen.
-  if (!results.length)
+
+  const { jobs, dropped } = found;
+  if (!jobs.length)
     return Response.json({
-      runs,
-      found: 0,
-      summary: '',
-      gaps: '',
-      picks: [],
+      jobs: [],
       dropped,
+      picks: [],
       empty: dropped
-        ? `Every match was outside the US (${dropped} dropped). Widen the titles or try a remote-friendly role.`
-        : 'No Greenhouse postings matched. These queries are probably too specific — drop a technology or a seniority word and run them again.',
+        ? `Every match was outside the US (${dropped} dropped).`
+        : 'Nothing matched. Widen the titles, or drop a keyword.',
     });
 
-  const { output } = await searchSummaryAgent(request, results);
+  const { output } = await searchSummaryAgent(request, jobs);
 
-  // The agent can only pick from what came back, but it can still invent a URL.
-  // Anything that does not resolve is dropped rather than rendered.
-  const byUrl = new Map(results.map((r) => [r.url, r]));
-  const picks = output.picks
-    .filter((p) => byUrl.has(p.url))
-    .map((p) => ({ ...p, hit: byUrl.get(p.url)! }));
+  // The agent can only pick from what came back, but it can still invent a
+  // URL. Anything that does not resolve is dropped rather than rendered.
+  const byUrl = new Map(jobs.map((j) => [j.url, j]));
+  const picks = output.picks.filter((p) => byUrl.has(p.url)).map((p) => ({ ...p, job: byUrl.get(p.url)! }));
 
-  console.log(`execute ${Date.now() - t}ms ${results.length} results, ${picks.length} picks`);
-  return Response.json({
-    runs,
-    found: results.length,
-    dropped,
-    summary: output.summary,
-    gaps: output.gaps,
-    picks,
-  });
+  console.log(`execute ${jobs.length} jobs, ${dropped} non-US, ${picks.length} picks`);
+  return Response.json({ jobs, dropped, summary: output.summary, gaps: output.gaps, picks });
 }

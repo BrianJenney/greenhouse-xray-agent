@@ -5,7 +5,7 @@
 > - `fixed` — the finished version. For when you are stuck, not before.
 
 ```bash
-cp .env.example .env.local   # proxy key + a free serper.dev key
+cp .env.example .env.local   # one proxy key, nothing else
 npm install && npm run dev
 ```
 
@@ -131,15 +131,19 @@ Scope stays `site:boards.greenhouse.io`. `site:*.greenhouse.io` looks more
 thorough and is worse: it pulls in `job-boards.eu` and `job-boards.anz`, so a
 Bay Area search comes back European.
 
-## Search provider
+## Search
 
-Serper (Google results, 2,500 free credits, no card) via `SERPER_API_KEY`.
+Keyless. The query goes to Brave, Greenhouse job URLs are pulled out of the
+response, and each posting is read back from the public Greenhouse board API —
+which gives the real title, company and location for free.
 
-> Keyless engines do not work for this. DuckDuckGo's HTML endpoint returns an
-> anomaly challenge after a handful of requests and Mojeek serves a captcha —
-> both fine for one manual search, both dead in a classroom. Greenhouse itself
-> has no cross-board search: `?q=`, `?search=`, `/v1/boards`,
-> `my.greenhouse.io/api/jobs/search` are all ignored or 404.
+Brave rate-limits to about one search per 30 seconds per IP. That is the cost
+of no key, and on shared wifi you take turns.
+
+> Serper was the alternative and is gone: its free tier rejects this query
+> shape outright — `400 Query pattern not allowed for free accounts` — on
+> anything with two OR groups and more than a couple of titles. DuckDuckGo and
+> Bing serve a challenge page instead of results.
 
 ## Evals
 

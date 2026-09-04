@@ -3,17 +3,16 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import type { Plan } from '@/lib/agents';
-import { withScope, type Hit, type Run } from '@/lib/greenhouse';
+import { googleUrl, type Job } from '@/lib/search';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
 type Results = {
-  runs: Run[];
-  found: number;
-  dropped?: number;
+  jobs: Job[];
+  dropped: number;
   summary: string;
   gaps: string;
-  picks: { url: string; why: string; hit: Hit }[];
+  picks: { url: string; why: string; job: Job }[];
   empty?: string;
   error?: string;
 };
@@ -145,7 +144,7 @@ export default function Page() {
                   className="flex-1 px-2 py-0.5 normal-case"
                 />
                 <a
-                  href={`https://www.google.com/search?q=${encodeURIComponent(withScope(q))}`}
+                  href={googleUrl(q)}
                   target="_blank"
                   rel="noreferrer"
                   className={`text-xs underline ${dim}`}
@@ -154,7 +153,7 @@ export default function Page() {
                 </a>
               </div>
             ))}
-            <div className={`pt-1 text-xs normal-case ${dim}`}>{withScope(queries[0] ?? '')}</div>
+
             <button
               onClick={run}
               disabled={!!busy || !queries.length}
@@ -170,49 +169,34 @@ export default function Page() {
 
         {results && !results.error && !results.empty && (
           <>
-            <div>
-              <div className={dim}>
-                {results.found} US POSTINGS
-                {results.dropped ? ` · ${results.dropped} NON-US DROPPED` : ''} — CLICK TO CHECK ON
-                GOOGLE
-              </div>
-              {results.runs.map((r) => (
-                <div key={r.query} className="normal-case">
-                  <span className={dim}>{String(r.hits).padStart(3)} </span>
-                  <a
-                    href={`https://www.google.com/search?q=${encodeURIComponent(withScope(r.query))}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline"
-                  >
-                    {r.query}
-                  </a>
-                </div>
-              ))}
-            </div>
-
             <Panel label="SUMMARY AGENT" note={`GAPS: ${results.gaps}`}>
               {results.summary}
             </Panel>
 
-            <table className="w-full">
-              <tbody>
-                {results.picks.map((p) => (
-                  <tr key={p.url} className="align-top">
-                    <td className="w-40 py-1">{p.hit.company || '—'}</td>
-                    <td className="py-1 normal-case">
-                      <a href={p.url} target="_blank" rel="noreferrer" className="underline">
-                        {p.hit.title}
-                      </a>
-                      <div className={`text-xs ${dim}`}>
-                        {p.hit.location ? `${p.hit.location} — ` : ''}
-                        {p.why}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div>
+              <div className={dim}>
+                {results.picks.length} PICKS OF {results.jobs.length} US POSTINGS
+                {results.dropped ? ` · ${results.dropped} NON-US DROPPED` : ''}
+              </div>
+              <table className="w-full">
+                <tbody>
+                  {results.picks.map((p) => (
+                    <tr key={p.url} className="align-top">
+                      <td className="w-40 py-1">{p.job.company}</td>
+                      <td className="py-1 normal-case">
+                        <a href={p.url} target="_blank" rel="noreferrer" className="underline">
+                          {p.job.title}
+                        </a>
+                        <div className={`text-xs ${dim}`}>
+                          {p.job.location ? `${p.job.location} — ` : ''}
+                          {p.why}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </>
         )}
       </div>
