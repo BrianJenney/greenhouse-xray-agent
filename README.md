@@ -158,3 +158,26 @@ dropped rather than counted.
 No auth, no rate limiting, no caching, no persistence, no tracing. Timing goes
 to `console.log` in `app/api/agent/route.ts` — that's the line we replace with
 LangSmith during class.
+
+## Why not Crawl4AI (or any browser)
+
+Tried it. Crawl4AI drives a real headless Chromium, so if anything gets past
+Google's bot wall, it does. Same two-group query, three engines:
+
+| Engine | With Crawl4AI |
+|---|---|
+| Google | 200, **0 postings** — challenge page |
+| DuckDuckGo | 302 → challenge page |
+| Brave | 12 postings |
+
+Google is a dead end even with a browser. Brave works — but plain `fetch` was
+already getting the same result from Brave in one HTTP call, without Python,
+Playwright, a Chromium download, and a Docker REST server (the npm `crawl4ai`
+package is just a client for that server). Crawl4AI earns its place when the
+target renders with JavaScript. Search result pages come back as HTML and the
+Greenhouse board API comes back as JSON; neither needs a browser.
+
+The one thing the browser did buy: it got past a 429 that plain `fetch` was
+stuck on, because a real browser session looks less like a script. That is a
+reason to run Brave through a browser *if* the rate limit becomes the blocker
+in class — not a reason to crawl.
