@@ -1,34 +1,7 @@
-# Greenhouse X-ray — class starting point
+# Greenhouse X-ray — reference implementation
 
-> **Branches**
-> - `main` — this one. Runs end to end, four things stubbed as `TODO(n)`.
-> - `fixed` — the finished version. For when you are stuck, not before.
-
-```bash
-cp .env.example .env.local   # proxy key + a free Firecrawl key
-npm install && npm run dev
-```
-
-## Your TODOs
-
-**TODO(1) — `lib/agents.ts`.** The summary agent has a one-line system prompt.
-Run `npm run smoke` first: it looks fine, because the zod field descriptions are
-carrying it. Write the prompt that guarantees the behaviour instead of hoping
-for it.
-
-**TODO(2) — `app/api/plan/route.ts`.** The page already posts the whole
-conversation. The route throws all of it away except the first message, so
-"make it staff level" starts over. Pass it through and teach the agent to
-refine.
-
-**TODO(3) / TODO(4) — `evals/run.ts`.** Two missing cases: one request naming a
-salary, one naming a city. Both are real ways this returns nothing.
-
-A case is a request, an action, and a rubric. That is the whole contract.
-
-## What already works
-
-Read these before you start — they are the parts worth stealing.
+> This is the `fixed` branch: the finished version, no TODOs. The class starts
+> from `main`.
 
 Type what you want. **searchAgent** either rejects the request or writes up to 5
 **Google X-ray queries** against `site:boards.greenhouse.io`. Those come back to

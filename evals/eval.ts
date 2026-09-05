@@ -30,9 +30,16 @@ const testCases: Case[] = [
 		rubric: 'Titles cover platform/infra/SRE and exclude manager and director. Staff and Principal are IC titles and must not be excluded.',
 	},
 	{
+		request: 'python data engineer, must pay at least 250k',
+		action: 'search',
+		rubric:
+			'No query contains a salary or pay figure. Titles cover data engineering with python as a keyword. The request is searched, not rejected.',
+	},
+	{
 		request: 'product designer in london',
 		action: 'search',
-		rubric: 'Titles cover product/UX design. No query contains London — a location returns nothing.',
+		rubric:
+			'Titles cover product/UX design. It is CORRECT that London is absent from every query — location is read from each posting afterwards.',
 	},
 	{ request: 'what does anthropic pay engineers?', action: 'reject' },
 	{ request: 'rewrite my resume for a stripe role', action: 'reject' },

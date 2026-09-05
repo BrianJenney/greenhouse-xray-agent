@@ -11,13 +11,7 @@ type Turn = { role: 'user' | 'assistant'; content: string };
 export async function POST(req: Request) {
   const { messages }: { messages: Turn[] } = await req.json();
 
-  // TODO(2): the page sends the whole conversation and we throw away all but
-  // the first message, so "make it staff level" starts from scratch instead of
-  // refining what was just proposed. Pass `messages` straight through, then
-  // tell the agent in its system prompt to start from the queries already on
-  // the table and change only what was asked. Those queries are already in
-  // here as assistant turns — that is what makes a refinement possible.
-  const { output } = await searchAgent(messages.slice(0, 1));
+  const { output } = await searchAgent(messages);
 
   console.log(`plan ${output.action} ${output.queries.length}q`);
   return Response.json(output);
