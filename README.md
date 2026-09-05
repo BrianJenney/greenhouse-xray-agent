@@ -5,7 +5,7 @@
 > - `fixed` — the finished version. For when you are stuck, not before.
 
 ```bash
-cp .env.example .env.local   # one proxy key, nothing else
+cp .env.example .env.local   # proxy key + a free Firecrawl key
 npm install && npm run dev
 ```
 
@@ -131,33 +131,34 @@ Scope stays `site:boards.greenhouse.io`. `site:*.greenhouse.io` looks more
 thorough and is worse: it pulls in `job-boards.eu` and `job-boards.anz`, so a
 Bay Area search comes back European.
 
-## Search
+## Search → fetch → clean → LLM
 
-No search engine. `data/boards.json` lists ~100 real Greenhouse boards; on
-first request every board is fetched in parallel from the public Greenhouse API
-(free, no key, no rate limit, ~13,500 postings in about a second) and cached
-for the life of the process. The boolean query is evaluated locally over each
-posting's title and description — the title carries the signal and ranks first.
+One Firecrawl call does the first three: a Google-backed search scoped to
+`boards.greenhouse.io`, with every result's page fetched and cleaned to
+markdown in the same response. The page text goes straight to the summary
+agent, which extracts title, company and location itself — there is no
+per-source parser to maintain.
 
-Every query still links to the same search on google.com so you can compare.
+```
+queries ──▶ POST api.firecrawl.dev/v2/search  { includeDomains, scrapeOptions }
+        ◀── [{ url, markdown }]  (already clean)
+        ──▶ searchSummaryAgent(pages)
+        ◀── { summary, picks: [{ url, title, company, location, why }], gaps }
+```
 
-> **Why not a search engine.** Each was tried and measured. Google, DuckDuckGo
-> and Bing serve a challenge page to anything that is not a browser — including
-> a real headless Chromium via Crawl4AI. Serper's free tier rejects OR groups
-> (`400 Query pattern not allowed for free accounts`), inconsistently: the same
-> query passed and failed minutes apart. Brave's scrape rate-limits one IP to a
-> search every ~30s and escalates when pushed, and its API is $5/mo credit
-> behind a credit card, not a free tier. A list of boards is the one option
-> that survives twenty people on one wifi.
+`lib/search.ts` is under 50 lines. Every query still links to the same search
+on google.com so you can compare by hand.
 
-## Location
+**Rate limit:** the free tier is 10 requests a minute and each query is one
+request. A 4-query search is 4 of them. Twenty people cannot share a key; the
+limit surfaces in the UI as a message, not as "no results".
 
-Locations do not go in the query. Each posting carries its real one, so
-`isUS()` filters in code and the UI says how many were dropped. The strings are
-free text — `"Remote - US"`, `"Remote, Canada; Remote, US"`, `"London OR
-Dublin"` — and every rule in that function came from a real one that broke it:
-a state code only counts after a comma, or `"London OR Dublin"` is Oregon and
-`"Montréal, Canada"` is California.
+> **Everything else was tried and measured.** Scraping Google, DuckDuckGo or
+> Bing — even through a real headless Chromium — gets a challenge page.
+> Serper's free tier rejects OR groups. Brave rate-limits per IP and escalates.
+> Google's own Custom Search JSON API is closed to new projects: "This project
+> does not have the access." Firecrawl is the one that runs the boolean, keyless,
+> across all of Greenhouse, and hands back clean text.
 
 ## Evals
 

@@ -71,12 +71,15 @@ async function llmAsJudge(request: string, rubric: string, queries: string[]) {
 	return output;
 }
 
-const post = (path: string, body: unknown) =>
-	fetch(API + path, {
+const post = async (path: string, body: unknown) => {
+	const r = await fetch(API + path, {
 		method: 'POST',
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify(body),
-	}).then((r) => r.json());
+	});
+	// A 500 has no JSON body. Surface it as an error row, not a crash.
+	return r.ok ? r.json() : { error: `${path} -> ${r.status}` };
+};
 
 async function main() {
 	const rows: Record<string, string | number>[] = [];
@@ -84,13 +87,14 @@ async function main() {
 	for (const c of testCases) {
 		const messages = [{ role: 'user', content: c.request }];
 		const plan = await post('/api/plan', { messages });
-		const action = `${plan.action === c.action ? '✓' : '✗'} ${plan.action}`;
+		const action = plan.error ? `✗ ${plan.error}` : `${plan.action === c.action ? '✓' : '✗'} ${plan.action}`;
 
-		if (plan.action === 'reject' || !c.rubric) {
+		if (plan.error || plan.action === 'reject' || !c.rubric) {
 			rows.push({
 				request: c.request.slice(0, 38),
 				action,
-				jobs: '—',
+				pages: '—',
+				picks: '—',
 				judge: '—',
 				note: plan.reason ?? '',
 			});
@@ -101,12 +105,17 @@ async function main() {
 			messages,
 			queries: plan.queries,
 		});
+		// The one hallucination that matters: a pick whose URL is not a page it read.
+		const known = new Set((res.pages ?? []).map((p: { url: string }) => p.url));
+		const invented = (res.picks ?? []).filter((p: { url: string }) => !known.has(p.url)).length;
+
 		const v = await llmAsJudge(c.request, c.rubric, plan.queries);
 
 		rows.push({
 			request: c.request.slice(0, 38),
 			action,
-			jobs: res.jobs?.length ?? 0,
+			pages: res.pages?.length ?? 0,
+			picks: `${res.picks?.length ?? 0}${invented ? ` (${invented} INVENTED)` : ''}`,
 			judge: v.score.toFixed(2),
 			note: String(res.error ?? res.empty ?? v.reasoning).slice(0, 46),
 		});

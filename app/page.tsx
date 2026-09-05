@@ -3,17 +3,16 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import type { Plan } from '@/lib/agents';
-import { googleUrl, type Job } from '@/lib/search';
+import { googleUrl } from '@/lib/search';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
+type Pick = { url: string; title: string; company: string; location: string; why: string };
 type Results = {
-  jobs: Job[];
-  dropped: number;
-  scanned: number;
+  pages: { url: string; title: string }[];
   summary: string;
   gaps: string;
-  picks: { url: string; why: string; job: Job }[];
+  picks: Pick[];
   empty?: string;
   error?: string;
 };
@@ -176,22 +175,19 @@ export default function Page() {
 
             <div>
               <div className={dim}>
-                {results.picks.length} PICKS OF {results.jobs.length} US MATCHES
-                {results.dropped ? ` · ${results.dropped} NON-US DROPPED` : ''} · {results.scanned}{' '}
-                POSTINGS SCANNED
+                {results.picks.length} PICKS FROM {results.pages.length} PAGES READ
               </div>
               <table className="w-full">
                 <tbody>
                   {results.picks.map((p) => (
                     <tr key={p.url} className="align-top">
-                      <td className="w-40 py-1">{p.job.company}</td>
+                      <td className="w-40 py-1">{p.company}</td>
                       <td className="py-1 normal-case">
                         <a href={p.url} target="_blank" rel="noreferrer" className="underline">
-                          {p.job.title}
+                          {p.title}
                         </a>
                         <div className={`text-xs ${dim}`}>
-                          {p.job.location ? `${p.job.location} — ` : ''}
-                          {p.why}
+                          {p.location} — {p.why}
                         </div>
                       </td>
                     </tr>
