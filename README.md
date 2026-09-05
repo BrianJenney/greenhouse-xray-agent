@@ -5,7 +5,7 @@
 > - `fixed` — the finished version. For when you are stuck, not before.
 
 ```bash
-cp .env.example .env.local   # one proxy key, nothing else
+cp .env.example .env.local   # proxy key + a free Brave key
 npm install && npm run dev
 ```
 
@@ -133,17 +133,22 @@ Bay Area search comes back European.
 
 ## Search
 
-Keyless. The query goes to Brave, Greenhouse job URLs are pulled out of the
-response, and each posting is read back from the public Greenhouse board API —
-which gives the real title, company and location for free.
+Same Brave engine two ways, and the query shape is identical for both:
 
-Brave rate-limits to about one search per 30 seconds per IP. That is the cost
-of no key, and on shared wifi you take turns.
+- **`BRAVE_API_KEY` set** — the Brave Search API. Free tier is 2,000 queries a
+  month, real concurrency. **Use this in a room.**
+- **Unset** — scrape `search.brave.com`. Zero setup, but one IP gets roughly a
+  search every 30 seconds and Brave escalates when pushed. Fine alone, dead on
+  shared wifi. A rate limit now surfaces as a rate limit, not as "no results".
 
-> Serper was the alternative and is gone: its free tier rejects this query
-> shape outright — `400 Query pattern not allowed for free accounts` — on
-> anything with two OR groups and more than a couple of titles. DuckDuckGo and
-> Bing serve a challenge page instead of results.
+Either way, Greenhouse job URLs are pulled from the response and each posting is
+read back from the public Greenhouse board API for its real title, company and
+location.
+
+> Why Brave and not Google: nothing keyless reaches Google — plain `fetch`, a
+> real headless Chromium via Crawl4AI, DuckDuckGo, Bing all serve a challenge
+> page. Serper's free tier rejects this query shape outright (`400 Query
+> pattern not allowed for free accounts`). Brave runs the full two-group query.
 
 ## Evals
 

@@ -10,18 +10,38 @@ export const googleUrl = (q: string) =>
   `https://www.google.com/search?q=${encodeURIComponent(scoped(q))}`;
 
 /**
- * No key, no account. Brave rate-limits to roughly one search per 30s per IP,
- * which is the price of keyless — and it is the only engine that runs the full
- * two-group query. Serper's free tier rejects it outright ("Query pattern not
- * allowed for free accounts"), DuckDuckGo and Bing serve a challenge page.
+ * Two ways to run the same Brave query:
+ *
+ * With BRAVE_API_KEY — the Brave Search API. Same engine, so the two-group
+ * query works, with real concurrency. Free tier is 2,000 queries a month.
+ * This is the one to use in a room.
+ *
+ * Without — scrape search.brave.com. Zero setup, but Brave rate-limits one IP
+ * to roughly a search every 30s and escalates when pushed, so it dies on
+ * shared wifi. Kept so the repo runs with nothing configured.
  */
 async function html(query: string): Promise<string> {
+	const key = process.env.BRAVE_API_KEY;
+	if (key) {
+		const r = await fetch(
+			`https://api.search.brave.com/res/v1/web/search?count=20&q=${encodeURIComponent(query)}`,
+			{ headers: { 'X-Subscription-Token': key, accept: 'application/json' } },
+		);
+		if (!r.ok) throw new Error(`Brave API ${r.status}: ${(await r.text()).slice(0, 120)}`);
+		return r.text();
+	}
+
 	const r = await fetch(`https://search.brave.com/search?q=${encodeURIComponent(query)}`, {
 		headers: { 'user-agent': UA },
 	});
-	if (r.status === 429)
-		throw new Error('Rate limited by Brave — wait about 30 seconds and search again.');
-	return r.text();
+	const body = await r.text();
+	// A rate limit is not "no results", and pretending it is sends the user off
+	// to rewrite a query that was fine.
+	if (r.status === 429 || /unusual traffic|are you a robot|captcha/i.test(body))
+		throw new Error(
+			'Brave is rate-limiting this IP. Wait a minute, or set BRAVE_API_KEY (free, 2,000/mo).',
+		);
+	return body;
 }
 
 /** Greenhouse job URLs, wherever they appear in the response. */
