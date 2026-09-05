@@ -1,0 +1,410 @@
+[
+  {
+    "slug": "spacex",
+    "name": "SpaceX"
+  },
+  {
+    "slug": "databricks",
+    "name": "Databricks"
+  },
+  {
+    "slug": "stripe",
+    "name": "Stripe"
+  },
+  {
+    "slug": "anthropic",
+    "name": "Anthropic"
+  },
+  {
+    "slug": "datadog",
+    "name": "Datadog"
+  },
+  {
+    "slug": "mongodb",
+    "name": "MongoDB"
+  },
+  {
+    "slug": "elastic",
+    "name": "Elastic"
+  },
+  {
+    "slug": "waymo",
+    "name": "Waymo"
+  },
+  {
+    "slug": "cloudflare",
+    "name": "Cloudflare"
+  },
+  {
+    "slug": "purestorage",
+    "name": "Everpure"
+  },
+  {
+    "slug": "canonical",
+    "name": "Canonical"
+  },
+  {
+    "slug": "verkada",
+    "name": "Verkada"
+  },
+  {
+    "slug": "oscar",
+    "name": "Oscar Health"
+  },
+  {
+    "slug": "brex",
+    "name": "Brex"
+  },
+  {
+    "slug": "braze",
+    "name": "Braze"
+  },
+  {
+    "slug": "samsara",
+    "name": "Samsara"
+  },
+  {
+    "slug": "gitlab",
+    "name": "GitLab"
+  },
+  {
+    "slug": "scaleai",
+    "name": "Scale AI"
+  },
+  {
+    "slug": "fivetran",
+    "name": "Fivetran "
+  },
+  {
+    "slug": "affirm",
+    "name": "Affirm"
+  },
+  {
+    "slug": "coinbase",
+    "name": "Coinbase"
+  },
+  {
+    "slug": "flexport",
+    "name": "Flexport"
+  },
+  {
+    "slug": "airbnb",
+    "name": "Airbnb"
+  },
+  {
+    "slug": "lyft",
+    "name": "Lyft"
+  },
+  {
+    "slug": "figma",
+    "name": "Figma"
+  },
+  {
+    "slug": "reddit",
+    "name": "Reddit"
+  },
+  {
+    "slug": "twilio",
+    "name": "Twilio"
+  },
+  {
+    "slug": "klaviyo",
+    "name": "Klaviyo"
+  },
+  {
+    "slug": "grafanalabs",
+    "name": "Grafana Labs"
+  },
+  {
+    "slug": "intercom",
+    "name": "Fin"
+  },
+  {
+    "slug": "robinhood",
+    "name": "Robinhood"
+  },
+  {
+    "slug": "intersystems",
+    "name": "InterSystems"
+  },
+  {
+    "slug": "gleanwork",
+    "name": "Glean"
+  },
+  {
+    "slug": "asana",
+    "name": "Asana"
+  },
+  {
+    "slug": "instacart",
+    "name": "Instacart"
+  },
+  {
+    "slug": "oura",
+    "name": "\u014cura"
+  },
+  {
+    "slug": "nuro",
+    "name": "Nuro"
+  },
+  {
+    "slug": "gusto",
+    "name": "Gusto, Inc."
+  },
+  {
+    "slug": "duolingo",
+    "name": "Duolingo"
+  },
+  {
+    "slug": "vercel",
+    "name": "Vercel"
+  },
+  {
+    "slug": "impact",
+    "name": "impact.com"
+  },
+  {
+    "slug": "mixpanel",
+    "name": "Mixpanel"
+  },
+  {
+    "slug": "fireblocks",
+    "name": "Fireblocks"
+  },
+  {
+    "slug": "chime",
+    "name": "Chime Financial, Inc"
+  },
+  {
+    "slug": "carta",
+    "name": "Carta"
+  },
+  {
+    "slug": "faire",
+    "name": "Faire"
+  },
+  {
+    "slug": "mercury",
+    "name": "Mercury"
+  },
+  {
+    "slug": "connectwise",
+    "name": "\u200eConnectWise"
+  },
+  {
+    "slug": "discord",
+    "name": "Discord"
+  },
+  {
+    "slug": "classpass",
+    "name": "ClassPass"
+  },
+  {
+    "slug": "launchdarkly",
+    "name": "LaunchDarkly"
+  },
+  {
+    "slug": "peloton",
+    "name": "Peloton"
+  },
+  {
+    "slug": "pagerduty",
+    "name": "PagerDuty"
+  },
+  {
+    "slug": "dropbox",
+    "name": "Dropbox"
+  },
+  {
+    "slug": "gofundme",
+    "name": "GoFundMe"
+  },
+  {
+    "slug": "freshprints",
+    "name": "Fresh Prints"
+  },
+  {
+    "slug": "amplitude",
+    "name": "Amplitude "
+  },
+  {
+    "slug": "attentive",
+    "name": "Attentive"
+  },
+  {
+    "slug": "highmetric",
+    "name": "NewRocket"
+  },
+  {
+    "slug": "gemini",
+    "name": "Gemini"
+  },
+  {
+    "slug": "veracyte",
+    "name": "Veracyte"
+  },
+  {
+    "slug": "nearform",
+    "name": " Nearform"
+  },
+  {
+    "slug": "earnin",
+    "name": "EarnIn"
+  },
+  {
+    "slug": "catapultsports",
+    "name": "Catapult Sports"
+  },
+  {
+    "slug": "webflow",
+    "name": "Webflow"
+  },
+  {
+    "slug": "kargo22",
+    "name": "Kargo"
+  },
+  {
+    "slug": "customerio",
+    "name": "Customer.io"
+  },
+  {
+    "slug": "squarespace",
+    "name": "Squarespace"
+  },
+  {
+    "slug": "betterment",
+    "name": "Betterment"
+  },
+  {
+    "slug": "cockroachlabs",
+    "name": "Cockroach Labs"
+  },
+  {
+    "slug": "turing",
+    "name": "Turing"
+  },
+  {
+    "slug": "dwelly",
+    "name": "Dwelly"
+  },
+  {
+    "slug": "fingerprint",
+    "name": "Fingerprint"
+  },
+  {
+    "slug": "coursera",
+    "name": "Coursera"
+  },
+  {
+    "slug": "thealleninstitute",
+    "name": "The Allen Institute for Artificial Intelligence"
+  },
+  {
+    "slug": "iterable",
+    "name": "Iterable"
+  },
+  {
+    "slug": "airtable",
+    "name": "Airtable"
+  },
+  {
+    "slug": "truebill",
+    "name": "Rocket Money"
+  },
+  {
+    "slug": "taskrabbit",
+    "name": "Taskrabbit"
+  },
+  {
+    "slug": "kayzen",
+    "name": "Kayzen"
+  },
+  {
+    "slug": "honeycomb",
+    "name": "Honeycomb.io"
+  },
+  {
+    "slug": "planetscale",
+    "name": "PlanetScale"
+  },
+  {
+    "slug": "myfitnesspal",
+    "name": "MyFitnessPal"
+  },
+  {
+    "slug": "udemy",
+    "name": "Udemy"
+  },
+  {
+    "slug": "oddball",
+    "name": "Oddball"
+  },
+  {
+    "slug": "calendly",
+    "name": "Calendly"
+  },
+  {
+    "slug": "deepmind",
+    "name": "DeepMind"
+  },
+  {
+    "slug": "xapo61",
+    "name": "Xapo Bank"
+  },
+  {
+    "slug": "spycloud",
+    "name": "SpyCloud"
+  },
+  {
+    "slug": "miris",
+    "name": "Miris"
+  },
+  {
+    "slug": "circleci",
+    "name": "CircleCI"
+  },
+  {
+    "slug": "getwellnetwork",
+    "name": "Get Well Network"
+  },
+  {
+    "slug": "masterclass",
+    "name": "MasterClass"
+  },
+  {
+    "slug": "pipetechnologies",
+    "name": "Pipe Technologies"
+  },
+  {
+    "slug": "warp",
+    "name": "Warp"
+  },
+  {
+    "slug": "upwork",
+    "name": "Upwork"
+  },
+  {
+    "slug": "straightarrownews",
+    "name": "Straight Arrow"
+  },
+  {
+    "slug": "sagent",
+    "name": "Sagent"
+  },
+  {
+    "slug": "urbansportsclub",
+    "name": "Urban Sports Club"
+  },
+  {
+    "slug": "risalabs",
+    "name": "Risa Labs"
+  },
+  {
+    "slug": "netlify",
+    "name": "Netlify"
+  },
+  {
+    "slug": "medium",
+    "name": "Medium"
+  }
+]

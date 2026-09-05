@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     return Response.json({ error: e instanceof Error ? e.message : String(e) });
   }
 
-  const { jobs, dropped } = found;
+  const { jobs, dropped, scanned } = found;
   if (!jobs.length)
     return Response.json({
       jobs: [],
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       picks: [],
       empty: dropped
         ? `Every match was outside the US (${dropped} dropped).`
-        : 'Nothing matched. Widen the titles, or drop a keyword.',
+        : `Nothing matched across ${scanned} postings. Widen the titles, or drop a keyword.`,
     });
 
   const { output } = await searchSummaryAgent(request, jobs);
@@ -38,6 +38,6 @@ export async function POST(req: Request) {
   const byUrl = new Map(jobs.map((j) => [j.url, j]));
   const picks = output.picks.filter((p) => byUrl.has(p.url)).map((p) => ({ ...p, job: byUrl.get(p.url)! }));
 
-  console.log(`execute ${jobs.length} jobs, ${dropped} non-US, ${picks.length} picks`);
-  return Response.json({ jobs, dropped, summary: output.summary, gaps: output.gaps, picks });
+  console.log(`execute ${scanned} scanned, ${jobs.length} US, ${dropped} non-US, ${picks.length} picks`);
+  return Response.json({ jobs, dropped, scanned, summary: output.summary, gaps: output.gaps, picks });
 }

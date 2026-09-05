@@ -5,7 +5,7 @@
 > - `fixed` — the finished version. For when you are stuck, not before.
 
 ```bash
-cp .env.example .env.local   # proxy key + a free Brave key
+cp .env.example .env.local   # one proxy key, nothing else
 npm install && npm run dev
 ```
 
@@ -133,22 +133,31 @@ Bay Area search comes back European.
 
 ## Search
 
-Same Brave engine two ways, and the query shape is identical for both:
+No search engine. `data/boards.json` lists ~100 real Greenhouse boards; on
+first request every board is fetched in parallel from the public Greenhouse API
+(free, no key, no rate limit, ~13,500 postings in about a second) and cached
+for the life of the process. The boolean query is evaluated locally over each
+posting's title and description — the title carries the signal and ranks first.
 
-- **`BRAVE_API_KEY` set** — the Brave Search API. Free tier is 2,000 queries a
-  month, real concurrency. **Use this in a room.**
-- **Unset** — scrape `search.brave.com`. Zero setup, but one IP gets roughly a
-  search every 30 seconds and Brave escalates when pushed. Fine alone, dead on
-  shared wifi. A rate limit now surfaces as a rate limit, not as "no results".
+Every query still links to the same search on google.com so you can compare.
 
-Either way, Greenhouse job URLs are pulled from the response and each posting is
-read back from the public Greenhouse board API for its real title, company and
-location.
+> **Why not a search engine.** Each was tried and measured. Google, DuckDuckGo
+> and Bing serve a challenge page to anything that is not a browser — including
+> a real headless Chromium via Crawl4AI. Serper's free tier rejects OR groups
+> (`400 Query pattern not allowed for free accounts`), inconsistently: the same
+> query passed and failed minutes apart. Brave's scrape rate-limits one IP to a
+> search every ~30s and escalates when pushed, and its API is $5/mo credit
+> behind a credit card, not a free tier. A list of boards is the one option
+> that survives twenty people on one wifi.
 
-> Why Brave and not Google: nothing keyless reaches Google — plain `fetch`, a
-> real headless Chromium via Crawl4AI, DuckDuckGo, Bing all serve a challenge
-> page. Serper's free tier rejects this query shape outright (`400 Query
-> pattern not allowed for free accounts`). Brave runs the full two-group query.
+## Location
+
+Locations do not go in the query. Each posting carries its real one, so
+`isUS()` filters in code and the UI says how many were dropped. The strings are
+free text — `"Remote - US"`, `"Remote, Canada; Remote, US"`, `"London OR
+Dublin"` — and every rule in that function came from a real one that broke it:
+a state code only counts after a comma, or `"London OR Dublin"` is Oregon and
+`"Montréal, Canada"` is California.
 
 ## Evals
 

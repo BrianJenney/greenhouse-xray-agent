@@ -10,6 +10,7 @@ type Msg = { role: 'user' | 'assistant'; content: string };
 type Results = {
   jobs: Job[];
   dropped: number;
+  scanned: number;
   summary: string;
   gaps: string;
   picks: { url: string; why: string; job: Job }[];
@@ -175,8 +176,9 @@ export default function Page() {
 
             <div>
               <div className={dim}>
-                {results.picks.length} PICKS OF {results.jobs.length} US POSTINGS
-                {results.dropped ? ` · ${results.dropped} NON-US DROPPED` : ''}
+                {results.picks.length} PICKS OF {results.jobs.length} US MATCHES
+                {results.dropped ? ` · ${results.dropped} NON-US DROPPED` : ''} · {results.scanned}{' '}
+                POSTINGS SCANNED
               </div>
               <table className="w-full">
                 <tbody>

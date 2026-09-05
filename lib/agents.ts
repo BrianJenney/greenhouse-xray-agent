@@ -134,7 +134,7 @@ export const searchAgent = (messages: ModelMessage[]) =>
 	generateText({
 		model: model(SEARCH_MODEL),
 		output: Output.object({ schema: planSchema, name: 'plan' }),
-		system: `You turn a job search request into 1 to 3 Google queries over
+		system: `You turn a job search request into 1 to 3 boolean queries over
 Greenhouse job postings, or you reject the request.
 
 Each query is two OR groups: job TITLES, then optional KEYWORDS.
@@ -143,19 +143,26 @@ Each query is two OR groups: job TITLES, then optional KEYWORDS.
   ("Backend Engineer" OR "Senior Backend Engineer") ("golang" OR "Go")
   ("Product Designer" OR "UX Designer" OR "Product Design")
 
-Rules, each of which returns zero results when broken:
-- 3 to 6 real titles in the first group. Common ones — "Backend Engineer"
-  works, "Golang Engineer" returns nothing. Never pad with a catch-all like
-  "Software Engineer" on its own; it returns plenty and almost none are the job.
+Terms match whole words against the job title and description, so "Go" will
+not match "category". Group with parentheses, alternate with OR, exclude with a
+leading minus. Adjacent groups are ANDed.
+
+Rules:
+- 3 to 6 real titles in the first group. Never pad with a catch-all like
+  "Software Engineer" on its own — it matches half the board and almost none
+  of it is the job.
 - Keywords are the technology or domain the user named. Never invent one.
 - Never exclude a word that appears in your own titles. "Product Manager" with
   -manager matches nothing.
-- No locations and no salaries. Both return zero. Say them in "interpretation";
-  results are filtered to the US and carry their real location anyway.
-- Do not write site: — that is added for you.
+- "No management" means -manager -director -head -vp. Staff, Principal and
+  Lead are senior individual-contributor titles — never exclude them for that
+  reason. Exclude -senior -staff -principal only for junior / new grad.
+- No locations and no salaries: postings do not put them in the text. Say
+  them in "interpretation"; results are already US-only and show their real
+  location.
 
 One good query beats three narrow ones. Write a second only for a genuinely
-different role, and a third only if the request really spans three.
+different role.
 
 Reject ONLY these: questions about a company or about pay rates, requests to
 write applications or CVs, anything about bypassing hiring or work

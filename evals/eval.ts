@@ -52,7 +52,14 @@ const verdict = z.object({
 	reasoning: z.string(),
 });
 
-/** A different model than the agents — grading yourself proves nothing. */
+/**
+ * A different model than the agents — grading yourself proves nothing.
+ *
+ * The judge is not deterministic. The same query has scored 0.00 and 1.00 on
+ * consecutive runs with the reasoning "correctly identifies relevant titles"
+ * both times. Read the reasoning, not just the number, and never gate a
+ * deploy on a single judge run.
+ */
 async function llmAsJudge(request: string, rubric: string, queries: string[]) {
 	const { output } = await generateText({
 		model: openai.chat('gpt-4o-mini'),
