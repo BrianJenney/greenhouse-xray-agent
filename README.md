@@ -9,6 +9,30 @@ cp .env.example .env.local   # proxy key + a free Firecrawl key
 npm install && npm run dev
 ```
 
+## What you need
+
+Three accounts, all free, about five minutes total. Everything else is `npm install`.
+
+| | What it does here | Free tier | Card? |
+|---|---|---|---|
+| **Parsity LiteLLM proxy** | the LLM (`gpt-5.4-mini` plans, `gpt-5.4` summarises) | key handed out in class | no |
+| **[Firecrawl](https://firecrawl.dev)** | one call: Google search scoped to Greenhouse + every result page cleaned to markdown | 500 credits, **10 requests/min** | no |
+| **[LangSmith](https://smith.langchain.com)** | traces every model call — what the agent saw, tokens, cost, latency | 5,000 traces/month | no |
+
+Sign up for Firecrawl and LangSmith, copy each API key from its dashboard, and
+paste into `.env.local`. `.env.example` walks through every variable.
+
+**The limit that will bite you in a room:** Firecrawl's free tier is 10
+requests a minute and **each query is one request**. A 4-query search uses 4.
+Everyone needs their own key — twenty people cannot share one. When you hit
+it, the UI says so; it does not pretend there were no results.
+
+**Bring your own instead:** the only thing tied to a vendor is `lib/search.ts`
+(under 50 lines). It has to turn a query into `{ url, title, text }` pages.
+Google's own Custom Search API is closed to new projects, and every scraped
+engine serves a challenge page — that is why Firecrawl — but a paid Serper key
+or Brave's API drops in the same place.
+
 ## Your TODOs
 
 **TODO(1) — `lib/agents.ts`.** The summary agent has a one-line system prompt.

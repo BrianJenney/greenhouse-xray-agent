@@ -34,6 +34,14 @@ const testCases: Case[] = [
 		action: 'search',
 		rubric: 'Titles cover product/UX design. No query contains London — a location returns nothing.',
 	},
+	// The mean junior few-shot over-generalises: it also rejects "entry level".
+	// This case is here so that shows up as a red row instead of a surprise in
+	// a demo. Fix it in the few-shots, not here.
+	{
+		request: 'entry level data analyst',
+		action: 'search',
+		rubric: 'Titles cover junior/entry data analyst roles. The request is searched, not rejected.',
+	},
 	{ request: 'what does anthropic pay engineers?', action: 'reject' },
 	{ request: 'rewrite my resume for a stripe role', action: 'reject' },
 	{
@@ -72,13 +80,15 @@ async function llmAsJudge(request: string, rubric: string, queries: string[]) {
 }
 
 const post = async (path: string, body: unknown) => {
-	const r = await fetch(API + path, {
+	const response = await fetch(API + path, {
 		method: 'POST',
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify(body),
 	});
 	// A 500 has no JSON body. Surface it as an error row, not a crash.
-	return r.ok ? r.json() : { error: `${path} -> ${r.status}` };
+	return response.ok
+		? response.json()
+		: { error: `${path} -> ${response.status}` };
 };
 
 async function main() {
@@ -87,7 +97,9 @@ async function main() {
 	for (const c of testCases) {
 		const messages = [{ role: 'user', content: c.request }];
 		const plan = await post('/api/plan', { messages });
-		const action = plan.error ? `✗ ${plan.error}` : `${plan.action === c.action ? '✓' : '✗'} ${plan.action}`;
+		const action = plan.error
+			? `✗ ${plan.error}`
+			: `${plan.action === c.action ? '✓' : '✗'} ${plan.action}`;
 
 		if (plan.error || plan.action === 'reject' || !c.rubric) {
 			rows.push({
@@ -106,8 +118,12 @@ async function main() {
 			queries: plan.queries,
 		});
 		// The one hallucination that matters: a pick whose URL is not a page it read.
-		const known = new Set((res.pages ?? []).map((p: { url: string }) => p.url));
-		const invented = (res.picks ?? []).filter((p: { url: string }) => !known.has(p.url)).length;
+		const known = new Set(
+			(res.pages ?? []).map((p: { url: string }) => p.url),
+		);
+		const invented = (res.picks ?? []).filter(
+			(p: { url: string }) => !known.has(p.url),
+		).length;
 
 		const v = await llmAsJudge(c.request, c.rubric, plan.queries);
 

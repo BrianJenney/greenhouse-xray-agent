@@ -12,10 +12,17 @@ import { LangSmithTelemetry } from 'langsmith/experimental/vercel';
 let client: Client | null = null;
 
 export function initTracing() {
-  if (client || process.env.LANGSMITH_TRACING !== 'true') return;
-  client = new Client();
-  registerTelemetry(LangSmithTelemetry({ client, projectName: process.env.LANGSMITH_PROJECT }));
-  console.log(`langsmith tracing -> ${process.env.LANGSMITH_PROJECT ?? 'default'}`);
+	if (client || process.env.LANGSMITH_TRACING !== 'true') return;
+	client = new Client();
+	registerTelemetry(
+		LangSmithTelemetry({
+			client,
+			projectName: process.env.LANGSMITH_PROJECT,
+		}),
+	);
+	console.log(
+		`langsmith tracing -> ${process.env.LANGSMITH_PROJECT ?? 'default'}`,
+	);
 }
 
 /**
@@ -24,5 +31,5 @@ export function initTracing() {
  * is broken. The server does not need this — it keeps running.
  */
 export async function flushTracing() {
-  await client?.awaitPendingTraceBatches();
+	await client?.awaitPendingTraceBatches();
 }
