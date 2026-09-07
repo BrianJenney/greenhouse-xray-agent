@@ -34,14 +34,13 @@ const testCases: Case[] = [
 		action: 'search',
 		rubric: 'Titles cover product/UX design. No query contains London — a location returns nothing.',
 	},
-	// The mean junior few-shot over-generalises: it also rejects "entry level".
-	// This case is here so that shows up as a red row instead of a surprise in
-	// a demo. Fix it in the few-shots, not here.
-	{
-		request: 'entry level data analyst',
-		action: 'search',
-		rubric: 'Titles cover junior/entry data analyst roles. The request is searched, not rejected.',
-	},
+	// TODO(3): add a case for a request that names a SALARY, e.g. "must pay
+	// 250k". Postings do not publish pay, so it cannot go in a query — and it
+	// must not be a reason to reject either. Write the rubric for both.
+	//
+	// TODO(4): the "we do not hire juniors" few-shot over-generalises: try
+	// "entry level data analyst" and watch it get rejected. Add a case that
+	// catches that, then fix it in the few-shots — not here.
 	{ request: 'what does anthropic pay engineers?', action: 'reject' },
 	{ request: 'rewrite my resume for a stripe role', action: 'reject' },
 	{

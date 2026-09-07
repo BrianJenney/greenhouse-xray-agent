@@ -197,7 +197,6 @@ export const searchSummaryAgent = (request: string, pages: Page[]) =>
 	generateText({
 		model: model(SUMMARY_MODEL),
 		output: Output.object({ schema: summarySchema, name: 'summary' }),
-		// TODO(1): write this system prompt.
 		// TODO(1): write this system prompt. The route never calls this with zero
 		// pages, so do not spend words on that case.
 		system: 'You review job postings.',
