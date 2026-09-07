@@ -19,23 +19,67 @@ you which are worth opening.
    ▼  searchSummaryAgent   picks, why, and what the results missed
 ```
 
-## Setup
+## What you need before you start
 
-Three free accounts, no cards.
+Three accounts. Two are free; OpenAI needs a few dollars of credit. Ten
+minutes total.
 
-| | For |
-|---|---|
-| Parsity LiteLLM proxy | the LLM — key handed out in class |
-| [Firecrawl](https://firecrawl.dev) | search + scrape in one call |
-| [LangSmith](https://smith.langchain.com) | see what the agent saw |
+### 1. OpenAI — the models
 
-```bash
-cp .env.example .env.local   # paste the three keys in
-npm install && npm run dev   # http://localhost:3000
+The agents run on `gpt-5.4-mini` and `gpt-5.4`.
+
+1. Sign up at **https://platform.openai.com**
+2. **Billing → Add credit.** $5 is plenty; a full search costs about a cent.
+3. **API keys → Create new secret key.** Copy it — it is shown once.
+
+```
+OPENAI_API_KEY=sk-...
 ```
 
-Firecrawl's free tier is **10 requests a minute, one per query.** Use your own
-key; you cannot share one with a room.
+> **In the workshop** you get a key for the Parsity proxy instead, plus
+> `OPENAI_BASE_URL=https://parsity-litellm.fly.dev/v1`. Same code, no OpenAI
+> account needed. Use unprefixed model names on the proxy — `openai/...`
+> aliases return "invalid model ID".
+
+### 2. Firecrawl — search and scrape
+
+One call searches Google scoped to Greenhouse and returns every result page
+already cleaned to markdown.
+
+1. Sign up at **https://firecrawl.dev** (free, no card)
+2. **Dashboard → API Keys → copy**
+
+```
+FIRECRAWL_API_KEY=fc-...
+```
+
+Free tier: 500 credits and **10 requests a minute**. Each query is one
+request, so a 4-query search is 4 of them. Use your own key — you cannot share
+one with a room.
+
+### 3. LangSmith — see what the agent saw
+
+Every model call traced: the prompt it got, the tokens, the cost, the latency.
+Optional, but you will not understand why the agent did something without it.
+
+1. Sign up at **https://smith.langchain.com** (free, no card)
+2. **Settings → API Keys → Create API Key**
+
+```
+LANGSMITH_TRACING=true
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+LANGSMITH_API_KEY=lsv2_...
+LANGSMITH_PROJECT=greenhouse-xray
+```
+
+`LANGSMITH_ENDPOINT` is required — without it nothing is sent, silently.
+
+### Then
+
+```bash
+cp .env.example .env.local   # paste the keys in
+npm install && npm run dev   # http://localhost:3000
+```
 
 ## How to write one of these
 
