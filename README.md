@@ -1,7 +1,7 @@
 # Greenhouse job search agent
 
 > **Want to build this with me?** I'm running a 2-day workshop on building
-> agents and setting up a RAG pipeline. **[Sign up here](https://form.typeform.com/to/EDuBEz4U).**
+> agents and setting up a RAG pipeline. **[Sign up here](https://form.typeform.com/to/qyEMw7Ao).**
 
 Type what you want. One agent writes boolean queries (or rejects the request),
 you pick which to run, they run, and a second agent reads the postings and tells
