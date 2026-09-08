@@ -43,7 +43,7 @@ export default function Page() {
   const [busy, setBusy] = useState<'' | 'plan' | 'run'>('');
 
   async function propose(text: string) {
-    const next: Msg[] = [...messages, { role: 'user', content: text }];
+    const next: Msg[] = [{ role: 'user', content: text }];
     setInput('');
     setPlan(null);
     setResults(null);
@@ -64,13 +64,6 @@ export default function Page() {
     setBusy('');
   }
 
-  const reset = () => {
-    setMessages([]);
-    setPlan(null);
-    setResults(null);
-    setInput('');
-  };
-
   return (
     <main className="flex h-dvh flex-col px-6 py-4 text-sm uppercase">
       <div className={`flex justify-between border-b border-[var(--scr-dim)] pb-1`}>
@@ -89,18 +82,13 @@ export default function Page() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={messages.length ? 'refine it' : 'what are you looking for?'}
+          placeholder="what are you looking for?"
           className="flex-1 px-2 py-1 normal-case"
           autoFocus
         />
         <button disabled={!!busy} className="px-3 py-1 disabled:opacity-40">
-          {busy === 'plan' ? '...' : messages.length ? 'REFINE' : 'PROPOSE'}
+          {busy === 'plan' ? '...' : 'PROPOSE'}
         </button>
-        {messages.length > 0 && (
-          <button type="button" onClick={reset} className="px-3 py-1">
-            NEW
-          </button>
-        )}
       </form>
 
       <div className="flex-1 space-y-5 overflow-y-auto">

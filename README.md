@@ -1,171 +1,148 @@
-# Greenhouse X-ray — reference implementation
+# Greenhouse job search agent (reference)
 
-> This is the `fixed` branch: the finished version, no TODOs. The class starts
-> from `main`.
+> **Want to build this with me?** I'm running a 2-day workshop on building
+> agents and setting up a RAG pipeline. **[Sign up here](https://form.typeform.com/to/qyEMw7Ao).**
 
-Type what you want. **searchAgent** either rejects the request or writes up to 5
-**Google X-ray queries** against `site:boards.greenhouse.io`. Those come back to
-you first — edit any, remove any — and only then do they run. Top 5 results per
-query, merged; **searchSummaryAgent** reads them and picks what is worth opening.
+Type what you want. One agent writes boolean queries (or rejects the request),
+you pick which to run, they run, and a second agent reads the postings and tells
+you which are worth opening.
 
-Two small things are the model's job: write the queries, and review the results.
+```
+"ai engineer, llm and rag"
+   │
+   ▼  searchAgent          reject, or 1–5 boolean queries
+   │
+   ▼  you                  remove or edit any, then run
+   │
+   ▼  Firecrawl            search Greenhouse, pages come back as markdown
+   │
+   ▼  searchSummaryAgent   picks, why, and what the results missed
+```
 
-## Run
+## What you need before you start
+
+Three accounts. Two are free; OpenAI needs a few dollars of credit. Ten
+minutes total.
+
+### 1. OpenAI — the models
+
+The agents run on `gpt-5.4-mini` and `gpt-5.4`.
+
+1. Sign up at **https://platform.openai.com**
+2. **Billing → Add credit.** $5 is plenty; a full search costs about a cent.
+3. **API keys → Create new secret key.** Copy it — it is shown once.
+
+```
+OPENAI_API_KEY=sk-...
+```
+
+> **In the workshop** you get a key for the Parsity proxy instead, plus
+> `OPENAI_BASE_URL=https://parsity-litellm.fly.dev/v1`. Same code, no OpenAI
+> account needed. Use unprefixed model names on the proxy — `openai/...`
+> aliases return "invalid model ID".
+
+### 2. Firecrawl — search and scrape
+
+One call searches Google scoped to Greenhouse and returns every result page
+already cleaned to markdown.
+
+1. Sign up at **https://firecrawl.dev** (free, no card)
+2. **Dashboard → API Keys → copy**
+
+```
+FIRECRAWL_API_KEY=fc-...
+```
+
+Free tier: 500 credits and **10 requests a minute**. Each query is one
+request, so a 4-query search is 4 of them. Use your own key — you cannot share
+one with a room.
+
+### 3. LangSmith — see what the agent saw
+
+Every model call traced: the prompt it got, the tokens, the cost, the latency.
+Optional, but you will not understand why the agent did something without it.
+
+1. Sign up at **https://smith.langchain.com** (free, no card)
+2. **Settings → API Keys → Create API Key**
+
+```
+LANGSMITH_TRACING=true
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+LANGSMITH_API_KEY=lsv2_...
+LANGSMITH_PROJECT=greenhouse-xray
+```
+
+`LANGSMITH_ENDPOINT` is required — without it nothing is sent, silently.
+
+### Then
 
 ```bash
-cp .env.example .env.local   # OPENAI_API_KEY, OPENAI_BASE_URL, SERPER_API_KEY
-npm run dev                  # app at /, slides at /slides
-
-npx tsx evals/queries.ts "kubernetes work, no management"   # queries only, no search
-npm run eval                 # 8 cases
+cp .env.example .env.local   # paste the keys in
+npm install && npm run dev   # http://localhost:3000
 ```
 
-## Conversation
+## How to write one of these
 
-The plan route takes the whole conversation, not one line. Proposed queries go
-back in as assistant turns, so a follow-up refines instead of restarting:
+Everything is in `lib/agents.ts`. An agent is a function that calls a model
+with a schema and some examples:
 
-```
-you:   senior backend engineer, golang
-agent: "Senior Backend Engineer" golang -intern
-       "Golang Engineer" -intern            ...
-
-you:   actually make it staff level and add kubernetes
-agent: "Staff Backend Engineer" golang kubernetes -intern
-       "Platform Engineer" kubernetes golang -intern       ...
-```
-
-## Tracing
-
-`lib/tracing.ts` — one `registerTelemetry()` traces every model call in the
-process, both agents and the eval judge, with nothing to wire per call. A no-op
-unless `LANGSMITH_TRACING=true`.
-
-## Two routes
-
-```
-POST /api/plan     { messages }
-  searchAgent -> { action: 'reject', reason }         nothing runs
-              -> { action: 'search', queries[<=5] }   shown to the user
-
-  [ user edits / removes ]
-
-POST /api/execute  { request, queries }
-  each query -> Google, scoped to site:boards.greenhouse.io, top 5
-  merge by URL, rank by how many queries surfaced it
-  searchSummaryAgent -> { summary, picks[], gaps }
-  URLs that do not resolve are dropped before render
-  zero results -> a message saying so, and the summary agent is not called
+```ts
+export const searchAgent = (messages) =>
+  generateText({
+    model: model('gpt-5.4-mini'),
+    output: Output.object({ schema: planSchema }),
+    system: `Respond as in these examples.\n\n${shotsBlock}`,
+    messages,
+  });
 ```
 
-## The queries
+**Schema first.** Never ask for text you then have to parse. Ask for the shape
+you want back and let zod refuse anything else:
 
-```
-site:boards.greenhouse.io ("Backend Engineer" OR "Senior Backend Engineer") golang -intern
-```
-
-Ordinary Google syntax — quoted titles, `OR` groups, parentheses, `-`
-exclusions. `site:` is added in `lib/greenhouse.ts` so the agent cannot forget
-it. Every query in the UI links to that exact search on google.com, so you can
-check the agent by hand.
-
-It fails one way: **over-constraining.** Google needs one page containing
-everything you asked for, and when none exists you get zero results and no
-error. Four rules, each measured, each in the prompt:
-
-| Rule | Broken |
-|---|---|
-| Common titles only | `"Backend Engineer"` → 10 · `"Golang Engineer"` → **0** |
-| No city, state or country | `("Product Designer" OR "UX Designer")` → 10 · same query `+ London` → **0** |
-| No salary or pay figure | postings do not publish them |
-| Don't repeat a technology already in the titles | `("Golang Engineer" …) golang` → **0** |
-
-Express seniority with exclusions (`-senior -staff`) or the ordinary `Senior X`
-form, never by inventing a rarer title. A constraint that cannot go in a query
-is **not** a reason to reject — say it in `interpretation` and let the user
-filter. Rejecting gives them nothing instead of a list they can scan.
-
-## Location
-
-A location cannot go in the query — Google returns nothing for it, because
-postings do not repeat the location in the text it indexes. So we search
-without it, then read each posting's **real** location from the Greenhouse
-board API, which the result URL already tells us how to call. Free, exact, and
-it turns location from a hope into a filter:
-
-- non-US postings are dropped in code (`isUS` in `lib/greenhouse.ts`), and the
-  UI says how many
-- unknown locations are kept — a posting we could not resolve is not evidence
-  that it is foreign
-- the real location goes to the summary agent, so it ranks by place instead of
-  telling you to "verify the location"
-
-Scope stays `site:boards.greenhouse.io`. `site:*.greenhouse.io` looks more
-thorough and is worse: it pulls in `job-boards.eu` and `job-boards.anz`, so a
-Bay Area search comes back European.
-
-## Search → fetch → clean → LLM
-
-One Firecrawl call does the first three: a Google-backed search scoped to
-`boards.greenhouse.io`, with every result's page fetched and cleaned to
-markdown in the same response. The page text goes straight to the summary
-agent, which extracts title, company and location itself — there is no
-per-source parser to maintain.
-
-```
-queries ──▶ POST api.firecrawl.dev/v2/search  { includeDomains, scrapeOptions }
-        ◀── [{ url, markdown }]  (already clean)
-        ──▶ searchSummaryAgent(pages)
-        ◀── { summary, picks: [{ url, title, company, location, why }], gaps }
+```ts
+const planSchema = z.object({
+  action: z.enum(['search', 'reject']),
+  reason: z.string(),                       // making it explain improves the answer
+  queries: z.array(z.string()).min(1).max(5),
+});
 ```
 
-`lib/search.ts` is under 50 lines. Every query still links to the same search
-on google.com so you can compare by hand.
+**Examples, not prose.** The search agent has no system prompt. `PLAN_SHOTS` is
+a list of `{ request, output }` pairs and each `reason` states the rule that
+example exists to teach. When the agent misbehaves, add an example — do not
+add a paragraph. Watch one example over-generalise: the "we do not hire
+juniors" shot also rejects "entry level".
 
-**Rate limit:** the free tier is 10 requests a minute and each query is one
-request. A 4-query search is 4 of them. Twenty people cannot share a key; the
-limit surfaces in the UI as a message, not as "no results".
+**Reject before you spend.** The first agent runs on the small model and
+decides whether to do anything at all. Junk, injection, and "who is the CEO"
+stop there for a fraction of a cent.
 
-> **Everything else was tried and measured.** Scraping Google, DuckDuckGo or
-> Bing — even through a real headless Chromium — gets a challenge page.
-> Serper's free tier rejects OR groups. Brave rate-limits per IP and escalates.
-> Google's own Custom Search JSON API is closed to new projects: "This project
-> does not have the access." Firecrawl is the one that runs the boolean, keyless,
-> across all of Greenhouse, and hands back clean text.
+**Human in the loop.** Queries go to the screen before they run. That is the
+cheapest correction in the whole system.
+
+**Trust nothing back.** The summary agent returns URLs; anything not in the
+pages it was actually given is dropped before render.
 
 ## Evals
 
-A case is a request, an expected action, and a rubric — that is the whole
-contract. The code assertions are only the two things worth failing a build
-over: a literal `AND` in a query, and a URL the summary agent invented. The
-judge grades taste, on a different model, and a grading it will not commit to is
-dropped rather than counted.
+`npm run eval` with the dev server running. A case is a request, the action it
+should take, and a rubric a second model grades against:
 
-## Not here yet
+```ts
+{ request: 'senior backend engineer, golang', action: 'search',
+  rubric: 'Titles cover backend engineering; keywords carry golang and Go.' }
+```
 
-No auth, no rate limiting, no caching, no persistence, no tracing. Timing goes
-to `console.log` in `app/api/agent/route.ts` — that's the line we replace with
-LangSmith during class.
+The judge is not deterministic — read the reasoning, not just the score.
 
-## Why not Crawl4AI (or any browser)
+## Branches
 
-Tried it. Crawl4AI drives a real headless Chromium, so if anything gets past
-Google's bot wall, it does. Same two-group query, three engines:
+`main` runs, with four `TODO(n)` markers to fill in:
 
-| Engine | With Crawl4AI |
-|---|---|
-| Google | 200, **0 postings** — challenge page |
-| DuckDuckGo | 302 → challenge page |
-| Brave | 12 postings |
+1. the summary agent's system prompt
+2. follow-up questions — let the agent ask one clarifying question when the
+   request is too vague to search, instead of guessing
+3. an eval case for a request that names a salary
+4. an eval case that catches the junior few-shot over-generalising
 
-Google is a dead end even with a browser. Brave works — but plain `fetch` was
-already getting the same result from Brave in one HTTP call, without Python,
-Playwright, a Chromium download, and a Docker REST server (the npm `crawl4ai`
-package is just a client for that server). Crawl4AI earns its place when the
-target renders with JavaScript. Search result pages come back as HTML and the
-Greenhouse board API comes back as JSON; neither needs a browser.
-
-The one thing the browser did buy: it got past a 429 that plain `fetch` was
-stuck on, because a real browser session looks less like a script. That is a
-reason to run Brave through a browser *if* the rate limit becomes the blocker
-in class — not a reason to crawl.
+`fixed` has 1, 3 and 4 done. Follow-up questions are the workshop exercise.
