@@ -173,8 +173,8 @@ const shotsBlock = PLAN_SHOTS.map(
  * Agent 1. Writes queries or refuses. It never searches and never sees a job —
  * the user reviews and edits this list before anything runs.
  *
- * Takes messages, and the UI already sends the whole conversation — but the
- * route currently hands it only the first one. See TODO(2).
+ * Takes messages so a conversation is possible, but the route hands it only
+ * the first one until TODO(2) is done — follow-up questions live there.
  */
 export const searchAgent = (messages: ModelMessage[]) =>
 	generateText({

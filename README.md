@@ -137,5 +137,12 @@ The judge is not deterministic — read the reasoning, not just the score.
 
 ## Branches
 
-`main` runs, with four `TODO(n)` markers to fill in. `fixed` is the finished
-version.
+`main` runs, with four `TODO(n)` markers to fill in:
+
+1. the summary agent's system prompt
+2. follow-up questions — let the agent ask one clarifying question when the
+   request is too vague to search, instead of guessing
+3. an eval case for a request that names a salary
+4. an eval case that catches the junior few-shot over-generalising
+
+`fixed` has 1, 3 and 4 done. Follow-up questions are the workshop exercise.

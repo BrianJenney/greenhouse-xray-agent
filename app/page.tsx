@@ -43,7 +43,10 @@ export default function Page() {
   const [busy, setBusy] = useState<'' | 'plan' | 'run'>('');
 
   async function propose(text: string) {
-    const next: Msg[] = [...messages, { role: 'user', content: text }];
+    // TODO(2): to support follow-up questions, accumulate here instead of
+    // starting fresh — `[...messages, { role: 'user', content: text }]` — so
+    // the agent's question and the user's answer both reach the next call.
+    const next: Msg[] = [{ role: 'user', content: text }];
     setInput('');
     setPlan(null);
     setResults(null);
@@ -63,13 +66,6 @@ export default function Page() {
     setResults(await post<Results>('/api/execute', { messages, queries }));
     setBusy('');
   }
-
-  const reset = () => {
-    setMessages([]);
-    setPlan(null);
-    setResults(null);
-    setInput('');
-  };
 
   return (
     <main className="flex h-dvh flex-col px-6 py-4 text-sm uppercase">
@@ -94,16 +90,8 @@ export default function Page() {
           autoFocus
         />
         <button disabled={!!busy} className="px-3 py-1 disabled:opacity-40">
-          {/* TODO(2): once /api/plan uses the whole conversation, label this
-              REFINE when messages.length > 0 — right now the server only reads
-              the first message, so calling it REFINE would be a lie. */}
           {busy === 'plan' ? '...' : 'PROPOSE'}
         </button>
-        {messages.length > 0 && (
-          <button type="button" onClick={reset} className="px-3 py-1">
-            NEW
-          </button>
-        )}
       </form>
 
       <div className="flex-1 space-y-5 overflow-y-auto">

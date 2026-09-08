@@ -11,13 +11,17 @@ type Turn = { role: 'user' | 'assistant'; content: string };
 export async function POST(req: Request) {
   const { messages }: { messages: Turn[] } = await req.json();
 
-  // TODO(2): the page sends the whole conversation and we throw away all but
-  // the first message, so "make it staff level" starts from scratch instead of
-  // refining what was just proposed. Pass `messages` straight through, then
-  // tell the agent in its system prompt to start from the queries already on
-  // the table and change only what was asked. Those queries are already in
-  // here as assistant turns — that is what makes a refinement possible.
-  const { output } = await searchAgent(messages.slice(0, 1));
+  // TODO(2): follow-up questions. The page already sends `messages` as a
+  // conversation and pushes each proposal back in as an assistant turn — but
+  // this route reads only the first message, so there is no conversation yet.
+  //
+  // Pass the whole array through, then let the agent ask ONE clarifying
+  // question when the request is too vague to search ("data" — analyst,
+  // engineer, or scientist?) instead of guessing. That needs a third action
+  // in planSchema alongside search and reject, and the page needs to render it
+  // as a question with the input focused, so the answer lands as the next
+  // user turn and the agent sees both.
+  const { output } = await searchAgent(messages.slice(0, 1)); // TODO(2): messages
 
   console.log(`plan ${output.action} ${output.queries.length}q`);
   return Response.json(output);
