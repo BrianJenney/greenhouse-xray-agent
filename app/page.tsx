@@ -89,12 +89,15 @@ export default function Page() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={messages.length ? 'refine it' : 'what are you looking for?'}
+          placeholder="what are you looking for?"
           className="flex-1 px-2 py-1 normal-case"
           autoFocus
         />
         <button disabled={!!busy} className="px-3 py-1 disabled:opacity-40">
-          {busy === 'plan' ? '...' : messages.length ? 'REFINE' : 'PROPOSE'}
+          {/* TODO(2): once /api/plan uses the whole conversation, label this
+              REFINE when messages.length > 0 — right now the server only reads
+              the first message, so calling it REFINE would be a lie. */}
+          {busy === 'plan' ? '...' : 'PROPOSE'}
         </button>
         {messages.length > 0 && (
           <button type="button" onClick={reset} className="px-3 py-1">
