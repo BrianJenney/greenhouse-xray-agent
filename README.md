@@ -53,9 +53,10 @@ already cleaned to markdown.
 FIRECRAWL_API_KEY=fc-...
 ```
 
-Free tier: 500 credits and **10 requests a minute**. Each query is one
-request, so a 4-query search is 4 of them. Use your own key — you cannot share
-one with a room.
+Free tier: 500 credits and **10 requests a minute**. A query with scraping
+costs about 10 credits, so that is ~50 queries a month — and each query is one
+request against the per-minute limit. Use your own key; you cannot share one
+with a room.
 
 ### 3. LangSmith — see what the agent saw
 
