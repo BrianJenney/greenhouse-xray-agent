@@ -9,6 +9,12 @@
   --scr-warn: #ffd34d;
 }
 
+/* Demo scale. Tailwind sizes are rem, so this lifts every text-xs/sm/lg
+   together and keeps their ratios. 20px ≈ 1.25× the default 16. */
+html {
+  font-size: 20px;
+}
+
 body {
   background: var(--scr-bg);
   color: var(--scr-fg);
