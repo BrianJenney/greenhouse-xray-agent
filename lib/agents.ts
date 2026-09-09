@@ -72,8 +72,7 @@ const PLAN_SHOTS: { request: string; output: Plan }[] = [
 		request: 'ai engineer, llm and rag work',
 		output: {
 			action: 'search',
-			reason:
-				'A real job search. Four queries from different angles — core titles, forward-deployed titles, senior titles, generic-title-plus-keyword — so the merged results cover the space. LLM and RAG are the keywords they named; nothing invented.',
+			reason: 'A real job search. Four queries from different angles — core titles, forward-deployed titles, senior titles, generic-title-plus-keyword — so the merged results cover the space. LLM and RAG are the keywords they named; nothing invented.',
 			queries: [
 				'("AI Engineer" OR "Applied AI Engineer" OR "Machine Learning Engineer") ("LLM" OR "RAG" OR "generative AI")',
 				'("Forward Deployed Engineer" OR "Solutions Engineer" OR "AI Solutions Engineer") ("LLM" OR "agents")',
@@ -86,8 +85,7 @@ const PLAN_SHOTS: { request: string; output: Plan }[] = [
 		request: 'senior backend engineer, golang',
 		output: {
 			action: 'search',
-			reason:
-				'A real job search. golang goes in the keyword group with its Go variant, since postings use both. Seniority is in the titles, not excluded. No catch-all like "Engineer" on its own.',
+			reason: 'A real job search. golang goes in the keyword group with its Go variant, since postings use both. Seniority is in the titles, not excluded. No catch-all like "Engineer" on its own.',
 			queries: [
 				'("Senior Backend Engineer" OR "Staff Backend Engineer" OR "Backend Engineer") ("golang" OR "Go")',
 				'("Senior Software Engineer" OR "Staff Software Engineer") ("golang" OR "Go")',
@@ -99,8 +97,7 @@ const PLAN_SHOTS: { request: string; output: Plan }[] = [
 		request: 'product designer in london',
 		output: {
 			action: 'search',
-			reason:
-				'A real job search. London is deliberately NOT in any query: postings do not put the location in searchable text, so it would return nothing. Each page states its real location and the reviewer reads it.',
+			reason: 'A real job search. London is deliberately NOT in any query: postings do not put the location in searchable text, so it would return nothing. Each page states its real location and the reviewer reads it.',
 			queries: [
 				'("Product Designer" OR "Senior Product Designer" OR "Staff Product Designer")',
 				'("UX Designer" OR "Product Design" OR "Interaction Designer")',
@@ -120,8 +117,7 @@ const PLAN_SHOTS: { request: string; output: Plan }[] = [
 		request: 'python data engineer, must pay at least 250k',
 		output: {
 			action: 'search',
-			reason:
-				'A real job search with a constraint that cannot go in a query — postings do not publish pay, so "250k" would return nothing. Search the titles and technology; the pay requirement is noted here for the reviewer, not encoded.',
+			reason: 'A real job search with a constraint that cannot go in a query — postings do not publish pay, so "250k" would return nothing. Search the titles and technology; the pay requirement is noted here for the reviewer, not encoded.',
 			queries: [
 				'("Data Engineer" OR "Senior Data Engineer" OR "Staff Data Engineer") ("python" OR "pyspark")',
 				'("Analytics Engineer" OR "Data Platform Engineer" OR "ETL Engineer") ("python")',
