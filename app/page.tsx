@@ -76,7 +76,7 @@ export default function Page() {
 	}
 
 	return (
-		<main className='flex h-dvh flex-col px-6 py-4 text-sm uppercase'>
+		<main className='flex h-dvh flex-col px-8 py-5 text-base uppercase'>
 			<div
 				className={`flex justify-between border-b border-[var(--scr-dim)] pb-1`}
 			>
@@ -96,12 +96,12 @@ export default function Page() {
 					value={input}
 					onChange={(e) => setInput(e.target.value)}
 					placeholder='what are you looking for?'
-					className='flex-1 px-2 py-1 normal-case'
+					className='flex-1 px-3 py-2 text-lg normal-case'
 					autoFocus
 				/>
 				<button
 					disabled={!!busy}
-					className='px-3 py-1 disabled:opacity-40'
+					className='px-4 py-2 disabled:opacity-40'
 				>
 					{busy === 'plan' ? '...' : 'PROPOSE'}
 				</button>
@@ -133,7 +133,19 @@ export default function Page() {
 					</Panel>
 				)}
 
-				{plan?.action === 'search' && (
+				{plan?.action === 'search' && results && !results.error && (
+					<div className={dim}>
+						RAN {queries.length} QUERIES —{' '}
+						<button
+							onClick={() => setResults(null)}
+							className='border-0 px-0 underline'
+						>
+							EDIT
+						</button>
+					</div>
+				)}
+
+				{plan?.action === 'search' && !results && (
 					<div>
 						<div className={dim}>
 							QUERIES — EDIT OR REMOVE, THEN RUN. site: IS ADDED
@@ -142,7 +154,7 @@ export default function Page() {
 						{queries.map((q, i) => (
 							<div
 								key={i}
-								className='flex items-baseline gap-2 py-1'
+								className='flex items-start gap-3 py-2'
 							>
 								<button
 									onClick={() =>
@@ -150,12 +162,15 @@ export default function Page() {
 											queries.filter((_, n) => n !== i),
 										)
 									}
-									className='border-0 px-0 text-[var(--scr-warn)]'
+									className='border-0 px-0 pt-2 text-[var(--scr-warn)]'
 								>
 									[X]
 								</button>
-								<input
+								{/* textarea, not input: a real boolean is two lines on a
+								    projector and clipping it hides the point of the demo */}
+								<textarea
 									value={q}
+									rows={2}
 									onChange={(e) =>
 										setQueries(
 											queries.map((x, n) =>
@@ -163,13 +178,13 @@ export default function Page() {
 											),
 										)
 									}
-									className='flex-1 px-2 py-0.5 normal-case'
+									className='flex-1 resize-none px-3 py-2 text-lg normal-case leading-snug'
 								/>
 								<a
 									href={googleUrl(q)}
 									target='_blank'
 									rel='noreferrer'
-									className={`text-xs underline ${dim}`}
+									className={`pt-2 text-sm underline ${dim}`}
 								>
 									GOOGLE
 								</a>
@@ -179,7 +194,7 @@ export default function Page() {
 						<button
 							onClick={run}
 							disabled={!!busy || !queries.length}
-							className='mt-2 px-3 py-1 disabled:opacity-40'
+							className='mt-3 px-4 py-2 disabled:opacity-40'
 						>
 							{busy === 'run'
 								? 'RUNNING...'
@@ -217,10 +232,10 @@ export default function Page() {
 								<tbody>
 									{results.picks.map((p) => (
 										<tr key={p.url} className='align-top'>
-											<td className='w-40 py-1'>
+											<td className='w-48 py-2'>
 												{p.company}
 											</td>
-											<td className='py-1 normal-case'>
+											<td className='py-2 normal-case'>
 												<a
 													href={p.url}
 													target='_blank'
@@ -230,7 +245,7 @@ export default function Page() {
 													{p.title}
 												</a>
 												<div
-													className={`text-xs ${dim}`}
+													className={`text-sm ${dim}`}
 												>
 													{p.location} — {p.why}
 												</div>
@@ -271,9 +286,9 @@ function Panel({
 				{warn ? '** ' : ''}
 				{label}
 			</div>
-			<p className='py-1 normal-case text-[var(--scr-hi)]'>{children}</p>
+			<p className='py-2 text-lg normal-case leading-relaxed text-[var(--scr-hi)]'>{children}</p>
 			{note && (
-				<p className='text-xs normal-case text-[var(--scr-warn)]'>
+				<p className='text-sm normal-case text-[var(--scr-warn)]'>
 					{note}
 				</p>
 			)}
